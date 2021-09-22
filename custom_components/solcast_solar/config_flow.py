@@ -76,8 +76,8 @@ class SolcastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_TILT, default=23): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=90)
                     ),
-                    vol.Required(CONF_EFFICIENCYFACTOR, default=0.9): vol.All(
-                        vol.Coerce(float), vol.Range(min=0.1, max=1.0)
+                    vol.Required(CONF_EFFICIENCYFACTOR, default=90): vol.All(
+                        vol.Coerce(float), vol.Range(min=1, max=100)
                     ),
                     vol.Required(CONF_CAPACITY, default=7500): vol.Coerce(int),
                 }
@@ -118,7 +118,7 @@ class SolcastSolarOptionFlowHandler(OptionsFlow):
                     vol.Required(
                         CONF_EFFICIENCYFACTOR,
                         default=self.config_entry.options[CONF_EFFICIENCYFACTOR],
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0.1, max=1.0)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                     vol.Required(
                         CONF_CAPACITY,
                         default=self.config_entry.options[CONF_CAPACITY],

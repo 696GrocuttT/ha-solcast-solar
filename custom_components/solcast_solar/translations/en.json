@@ -9,7 +9,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "apikey": "Solcast API Key",
-                    "efficiencyfactor": "Loss factory 0.1 to 1.0 (0.6 is 60% efficient",
+                    "efficiencyfactor": "Loss factory 1 to 100 (60 is 60% efficient)",
                     "capacity": "Total Watt peak power of your solar inverter",
                     "name": "Name"
                 },
@@ -26,7 +26,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "apikey": "Solcast API Key",
-                    "efficiencyfactor": "Loss factory 0.1 to 1.0 (0.6 is 60% efficient",
+                    "efficiencyfactor": "Loss factory 1 to 100 (60 is 60% efficient)",
                     "capacity": "Total Watt peak power of your solar inverter",
                     "name": "Name"
                 },

@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                 api_key=entry.options[CONF_APIKEY],
                                 tilt=(entry.options[CONF_TILT]),
                                 azimuth=(entry.options[CONF_AZIMUTH] - 180),
-                                efficiencyfactor=(entry.options[CONF_EFFICIENCYFACTOR]),
+                                efficiencyfactor=(entry.options[CONF_EFFICIENCYFACTOR] / 100),
     )
     
     # update interval. 
