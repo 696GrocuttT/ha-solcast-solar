@@ -1,0 +1,13 @@
+{
+  "domain": "solcast_solar",
+  "name": "Solcast PV Forecast",
+  "version": "0.0.1",
+  "config_flow": true,
+  "documentation": "https://github.com/oziee/ha-solcast-solar",
+  "requirements": ["aiohttp>=3.6.2", "datetime>=4.3", "isodate>=0.6.0"],
+  "dependencies": [],
+  "iot_class": "cloud_polling",
+  "codeowners": [
+    "@oziee"
+  ]
+}
