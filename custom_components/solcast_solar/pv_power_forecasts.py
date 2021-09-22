@@ -60,10 +60,19 @@ class PvPowerForecasts:
 
     async def estimate(self) -> Estimate:
 
-        data = await self._request(
+        self.end_point = 'pv_power/forecasts'
+        data1 = await self._request(
             params={"latitude": self.latitude, "longitude": self.longitude, "capacity": self.capacity, "tilt": self.tilt, "azimuth": self.azimuth, "loss_factor":self.efficiencyfactor, "format": "json", "api_key":self.api_key},
         )
-        return Estimate.from_dict(data)
+
+        self.end_point = 'pv_power/estimated_actuals'
+        data2 = await self._request(
+            params={"latitude": self.latitude, "longitude": self.longitude, "capacity": self.capacity, "tilt": self.tilt, "azimuth": self.azimuth, "loss_factor":self.efficiencyfactor, "format": "json", "api_key":self.api_key},
+        )
+
+        z = dict({"forecasts": (data1.get("forecasts") + data2.get("estimated_actuals"))})
+
+        return Estimate.from_dict(z)
 
     async def close(self) -> None:
         """Close open client session."""

@@ -69,6 +69,12 @@ class Estimate:
             An Estimate object.
         """
 
+        ##datagot = []
+        #if "forecasts" in data:
+        #    datagot = data.get("forecasts")
+        #else:
+        #    datagot = data.get("estimated_actuals")
+
         forecasts = []
         for forecast in data.get("forecasts"):
             # Convert period_end and period. All other fields should already be the correct type
