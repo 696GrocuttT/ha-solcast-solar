@@ -1,1 +1,36 @@
-
+{
+    "config": {
+        "step": {
+        "user": {
+            "description": "Fill in the data of your solar panels. Please refer to the documentation if a field is unclear.",
+            "data": {
+            "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
+            "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
+            "latitude": "[%key:common::config_flow::data::latitude%]",
+            "longitude": "[%key:common::config_flow::data::longitude%]",
+            "apikey": "Solcast API Key",
+            "efficiencyfactor": "Loss factory 0.1 to 1.0 (0.6 is 60% efficient",
+            "capacity": "Total Watt peak power of your solar inverter",
+            "name": "[%key:common::config_flow::data::name%]"
+            }
+        }
+        }
+    },
+    "options": {
+        "step": {
+        "init": {
+            "description": "These values allow tweaking the Solar.Forecast result. Please refer to the documentation if a field is unclear.",
+            "data": {
+            "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
+            "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
+            "latitude": "[%key:common::config_flow::data::latitude%]",
+            "longitude": "[%key:common::config_flow::data::longitude%]",
+            "apikey": "Solcast API Key",
+            "efficiencyfactor": "Loss factory 0.1 to 1.0 (0.6 is 60% efficient",
+            "capacity": "Total Watt peak power of your solar inverter",
+            "name": "[%key:common::config_flow::data::name%]"
+            }
+        }
+        }
+    }
+}

@@ -1,1 +1,37 @@
 
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
+                    "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "apikey": "Solcast API Key",
+                    "efficiencyfactor": "Loss factory 0.1 to 1.0 (0.6 is 60% efficient",
+                    "capacity": "Total Watt peak power of your solar inverter",
+                    "name": "Name"
+                },
+                "description": "Fill in the data of your solar panels."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
+                    "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "apikey": "Solcast API Key",
+                    "efficiencyfactor": "Loss factory 0.1 to 1.0 (0.6 is 60% efficient",
+                    "capacity": "Total Watt peak power of your solar inverter",
+                    "name": "Name"
+                },
+                "description": "These values allow tweaking the Solcast Integration."
+            }
+        }
+    }
+}
