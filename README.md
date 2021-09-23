@@ -16,7 +16,7 @@ Modified from the great works of
 Add a new HA Integration selecting 'Solcast PV Solar'
 
 #### Getting a Solcast API Key:
-Sign up for an API key (https://www.home-assistant.io/)
+Sign up for an API key (https://solcast.com/)
 
 
 #### Integration variables:

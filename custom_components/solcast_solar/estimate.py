@@ -5,16 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, date, timezone
 from isodate import parse_datetime, parse_duration
 from typing import Any
-import sys
-
-if sys.version_info[:2] >= (3, 9):
-    import zoneinfo
-else:
-    from backports import zoneinfo
-
-from aiohttp import ClientResponse
-
-
+from operator import itemgetter
 
 
 @dataclass
@@ -25,8 +16,8 @@ class Estimate:
         wh_hours: Estimated solar energy production per hour.
     """
 
-    wh_days: dict[datetime, int]
-    wh_hours: dict[datetime, int]
+    wh_days: dict[datetime, float]
+    wh_hours: dict[datetime, float]
 
         
     @property
@@ -50,11 +41,8 @@ class Estimate:
 
     def now(self) -> datetime:
         """Return the current timestamp in the API timezone."""
-        #return datetime.now(tz=zoneinfo.ZoneInfo('Australia/Brisbane'))
         return datetime.now()
 
-
-    
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Estimate:
         """Return a Estimate object from a Solcast Solar API response.
@@ -69,12 +57,6 @@ class Estimate:
             An Estimate object.
         """
 
-        ##datagot = []
-        #if "forecasts" in data:
-        #    datagot = data.get("forecasts")
-        #else:
-        #    datagot = data.get("estimated_actuals")
-
         forecasts = []
         for forecast in data.get("forecasts"):
             # Convert period_end and period. All other fields should already be the correct type
@@ -83,15 +65,25 @@ class Estimate:
             forecast["period_start"] = forecast["period_end"] - forecast["period"]
             forecasts.append(forecast)
 
+        #sort the list by date
+        f = itemgetter('period_start')
+        forecasts.sort(key=f)
+
+        #remove odd hour elements from first and last because it messes up the KWh values
+        if forecasts[0]['period_start'].minute == 30:
+            del forecasts[0]
+        if forecasts[-1]['period_start'].minute == 0:
+            del forecasts[-1]
+
         wh_days = {}
         for item in forecasts:
             timestamp = item['period_end']
             energy = float(item["pv_estimate"]) * 0.5
             d = datetime(timestamp.year, timestamp.month, timestamp.day)
             if d in wh_days:
-                wh_days[d] += round(energy)
+                wh_days[d] += round(energy, 2)
             else:
-                wh_days[d] = round(energy)
+                wh_days[d] = round(energy, 2)
 
         wh_hours = {}
         for item in forecasts:
@@ -99,9 +91,9 @@ class Estimate:
             energy = float(item["pv_estimate"]) * 0.5
             d = datetime(timestamp.year, timestamp.month, timestamp.day, timestamp.hour , 0, 0)
             if d in wh_hours:
-                wh_hours[d] += round(energy)
+                wh_hours[d] += round(energy, 2)
             else:
-                wh_hours[d] = round(energy)
+                wh_hours[d] = round(energy, 2)
 
         return cls(
             wh_hours=wh_hours,

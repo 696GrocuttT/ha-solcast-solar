@@ -2,7 +2,7 @@
     "config": {
         "step": {
         "user": {
-            "description": "Fill in the data of your solar panels. Please refer to the documentation if a field is unclear.",
+            "description": "Fill in the data of your solar panels.",
             "data": {
             "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
             "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
@@ -19,7 +19,7 @@
     "options": {
         "step": {
         "init": {
-            "description": "These values allow tweaking the Solar.Forecast result. Please refer to the documentation if a field is unclear.",
+            "description": "These values allow tweaking the Solcast Integration.",
             "data": {
             "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
             "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",

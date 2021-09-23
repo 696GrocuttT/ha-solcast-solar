@@ -8,10 +8,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from aiohttp import ClientSession
-from yarl import URL
-
-from .estimate import Estimate
 from .pv_power_forecasts import PvPowerForecasts
 
 from homeassistant.config_entries import ConfigEntry

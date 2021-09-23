@@ -1,5 +1,5 @@
 {
-    "name": "Solcast Solar",
+    "name": "Solcast PV Solar",
     "render_readme": true,
     "domains": [
         "sensor"
