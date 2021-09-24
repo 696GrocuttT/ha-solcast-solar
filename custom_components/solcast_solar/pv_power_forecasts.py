@@ -65,12 +65,18 @@ class PvPowerForecasts:
             params={"latitude": self.latitude, "longitude": self.longitude, "capacity": self.capacity, "tilt": self.tilt, "azimuth": self.azimuth, "loss_factor":self.efficiencyfactor, "format": "json", "api_key":self.api_key},
         )
 
-        self.end_point = 'pv_power/estimated_actuals'
-        data2 = await self._request(
-            params={"latitude": self.latitude, "longitude": self.longitude, "capacity": self.capacity, "tilt": self.tilt, "azimuth": self.azimuth, "loss_factor":self.efficiencyfactor, "format": "json", "api_key":self.api_key},
-        )
+        #self.end_point = 'pv_power/estimated_actuals'
+        #data2 = await self._request(
+        #    params={"latitude": self.latitude, "longitude": self.longitude, "capacity": self.capacity, "tilt": self.tilt, "azimuth": self.azimuth, "loss_factor":self.efficiencyfactor, "format": "json", "api_key":self.api_key},
+        #)
 
-        z = dict({"forecasts": (data1.get("forecasts") + data2.get("estimated_actuals"))})
+        z = dict()
+        if "response_status" in data1: #or "response_status" in data2:
+            z = self.savedata
+        else:
+            #z = dict({"forecasts": (data1.get("forecasts") + data2.get("estimated_actuals"))})
+            z = data1
+            self.savedata = z
 
         return Estimate.from_dict(z)
 

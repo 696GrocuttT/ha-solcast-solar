@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     
     # update interval. 
-    update_interval = timedelta(hours=2)
+    update_interval = timedelta(hours=1)
 
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
