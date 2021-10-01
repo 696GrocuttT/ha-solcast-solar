@@ -4,9 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from .estimate import Estimate
-
 from homeassistant.components.sensor import SensorEntityDescription
+
+from .estimate import Estimate
 
 
 @dataclass

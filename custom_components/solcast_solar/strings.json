@@ -2,15 +2,11 @@
     "config": {
         "step": {
         "user": {
-            "description": "Fill in the data of your solar panels.",
+            "description": "Fill in the data for your solar panels.",
             "data": {
-            "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
-            "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
-            "latitude": "[%key:common::config_flow::data::latitude%]",
-            "longitude": "[%key:common::config_flow::data::longitude%]",
-            "apikey": "Solcast API Key",
-            "efficiencyfactor": "Loss factory 1 to 100 (60 is 60% efficient)",
-            "capacity": "Total Watt peak power of your solar inverter",
+            "apikey": "Solcast API key",
+            "rooftop": "Solcast rooftop id",
+            "pollapi": "Interval hours (between polling the Solcast API)",
             "name": "[%key:common::config_flow::data::name%]"
             }
         }
@@ -19,15 +15,11 @@
     "options": {
         "step": {
         "init": {
-            "description": "These values allow tweaking the Solcast Integration.",
+            "description": "These values allow tweaking the Solcast integration.",
             "data": {
-            "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
-            "tilt": "Tilt (0 = Horizontal, 90 = Vertical)",
-            "latitude": "[%key:common::config_flow::data::latitude%]",
-            "longitude": "[%key:common::config_flow::data::longitude%]",
-            "apikey": "Solcast API Key",
-            "efficiencyfactor": "Loss factory 1 to 100 (60 is 60% efficient)",
-            "capacity": "Total Watt peak power of your solar inverter",
+            "apikey": "Solcast API key",
+            "rooftop": "Solcast rooftop id",
+            "pollapi": "Interval hours (between polling the Solcast API)",
             "name": "[%key:common::config_flow::data::name%]"
             }
         }

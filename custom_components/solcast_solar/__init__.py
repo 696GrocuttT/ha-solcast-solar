@@ -1,31 +1,22 @@
 """The Solcast Solar integration."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, date
 import logging
-
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from typing import Any
 
-from .pv_power_forecasts import PvPowerForecasts
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .pv_power_forecasts import PvPowerForecasts
+
 _BASE_URL = 'https://api.solcast.com.au/'
 
-from .const import (
-    CONF_APIKEY,
-    CONF_AZIMUTH,
-    CONF_TILT,
-    CONF_EFFICIENCYFACTOR,
-    CONF_CAPACITY,
-    DOMAIN,
-)
+from .const import CONF_APIKEY, CONF_POLLAPI, CONF_ROOFTOP, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -36,17 +27,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
 
     forecast = PvPowerForecasts(session=session,
-                                latitude=entry.data[CONF_LATITUDE],
-                                longitude=entry.data[CONF_LONGITUDE],
-                                capacity=entry.options[CONF_CAPACITY],
                                 api_key=entry.options[CONF_APIKEY],
-                                tilt=(entry.options[CONF_TILT]),
-                                azimuth=(entry.options[CONF_AZIMUTH] - 180),
-                                efficiencyfactor=(entry.options[CONF_EFFICIENCYFACTOR] / 100),
+                                rooftop=entry.options[CONF_ROOFTOP],
     )
     
+    
     # update interval. 
-    update_interval = timedelta(hours=1)
+    internval = int(entry.options[CONF_POLLAPI])
+    
+    update_interval = timedelta(hours=internval)
 
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
@@ -71,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
+    
     return unload_ok
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:

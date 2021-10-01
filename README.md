@@ -18,13 +18,5 @@ Add a new HA Integration selecting 'Solcast PV Solar'
 #### Getting a Solcast API Key:
 Sign up for an API key (https://solcast.com/)
 
-
-#### Integration variables:
-* **api_key**: Your API key from Solcast.
-* **name**: a name for the integration
-* **latitude**: default collected from home-assistant value
-* **longtiude**: default collected from home-assistant value
-* **azimuth**: The angle between a line pointing due north to the sun's current position in the sky. Negative to the East. Positive to the West. 0 at due North.
-* **tilt**: The angle (degrees) that the PV system is tilted off the horizontal. Must be between 0 and 90
-* **efficiency factor**: loss factor of the pv system. 0.0 -> 1.0. 0.6 your returned power will be a maximum of 60% of AC capacity.
-* **pv system capacity**: your pv system inverter max power output in watts (7.5kw system is 7500).
+Create a Rooftop entity on the Solcast website. This will generate a rooftop_id (resource id)
+Copy the id and api for this integration to work

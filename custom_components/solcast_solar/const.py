@@ -1,23 +1,18 @@
 """Constants for the Solcast Solar integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Final
 
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR,
-
-)
+from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
 
 from .models import SolcastSolarSensorEntityDescription
 
 DOMAIN = "solcast_solar"
 
 CONF_APIKEY = "apikey"
-CONF_AZIMUTH = "azimuth"
-CONF_TILT = "tilt"
-CONF_EFFICIENCYFACTOR = "efficiencyfactor"
-CONF_CAPACITY = "capacity"
+CONF_ROOFTOP = "rooftop"
+CONF_POLLAPI = "pollapi"
 ATTR_ENTRY_TYPE: Final = "entry_type"
 ENTRY_TYPE_SERVICE: Final = "service"
 
@@ -25,14 +20,34 @@ SENSORS: tuple[SolcastSolarSensorEntityDescription, ...] = (
     SolcastSolarSensorEntityDescription(
         key="energy_production_forecast_today",
         name="Estimated Energy Production - Today",
-        state=lambda estimate: estimate.energy_production_today / 1000,
+        state=lambda estimate: round(estimate.energy_production_today / 1000, 3),
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     SolcastSolarSensorEntityDescription(
         key="energy_production_forecast_tomorrow",
         name="Estimated Energy Production - Tomorrow",
-        state=lambda estimate: estimate.energy_production_tomorrow / 1000,
+        state=lambda estimate: round(estimate.energy_production_tomorrow / 1000, 3),
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SolcastSolarSensorEntityDescription(
+        key="solcast_api_poll_counter",
+        name="This Solcast Integration API Hit Counter",
+        state=lambda estimate: estimate.api_hit_counter,
+        device_class="api_count",
+    ),
+    SolcastSolarSensorEntityDescription(
+        key="energy_this_hour",
+        state=lambda estimate: round(estimate.sum_energy_production(0) / 1000, 3),
+        name="Estimated Energy Production - This Hour",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SolcastSolarSensorEntityDescription(
+        key="energy_next_hour",
+        state=lambda estimate: round(estimate.sum_energy_production(1) / 1000, 3),
+        name="Estimated Energy Production - Next Hour",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
