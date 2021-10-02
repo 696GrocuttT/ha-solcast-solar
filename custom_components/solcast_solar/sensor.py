@@ -73,3 +73,10 @@ class SolcastSolarSensorEntity(CoordinatorEntity, SensorEntity):
         if isinstance(state, datetime):
             return state.isoformat()
         return state
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+        False if entity pushes its state to HA.
+        """
+        return True
