@@ -1,4 +1,3 @@
-{% if installed %}
 ### Breaking Changes
 
 Any previous integration setup must be deleted and re-created. So many things have been changed in this version that it just isnt possible to be backward compatible
