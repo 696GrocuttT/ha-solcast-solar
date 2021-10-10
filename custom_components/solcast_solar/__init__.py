@@ -109,12 +109,11 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
 
     def sum_energy_production(self, period_hours: int) -> float:
         """Return the sum of the energy production."""
-        now = datetime.datetime.now().replace(tzinfo=timezone.utc).astimezone(tz=None) + timedelta(hours=period_hours)
+        now = datetime.datetime.now() + timedelta(hours=period_hours)
 
         total = 0
 
         for timestamp, wh in self.wh_hours.items():
-            timestamp = timestamp.replace(tzinfo=timezone.utc).astimezone(tz=None)
             if (timestamp.day == now.day) and (timestamp.hour == now.hour):
                 total += wh
 
@@ -162,7 +161,7 @@ class SolcastDataCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("%s - Last update is less than time interval set", self.logname)
                 _doData1 = False
             else:
-                _LOGGER.debug("%s - Long time since last update API get", self.logname)
+                _LOGGER.debug("%s - Greater then interval hour since last API get", self.logname)
                 _doData1 = True
                 _doData2 = True
 
