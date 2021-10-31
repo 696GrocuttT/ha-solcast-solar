@@ -324,7 +324,7 @@ class SolcastRooftopSite(SolcastAPI):
                             _LOGGER.debug(f"Forecast update scheduled update at {exec_time.astimezone().isoformat()}")
                             async_call_later(self._hass, exec_delay, self.update_forecast)
 
-                        self.set_forecast_states()
+                        #self.set_forecast_states()
                 except Exception:
                     _LOGGER.error("sunrise_call_action: %s", traceback.format_exc())
 
@@ -364,28 +364,30 @@ class SolcastRooftopSite(SolcastAPI):
 
     def set_forecast_states(self):
         try:
-            self._states[SensorType.forecast_today] = round(
-                    self._calculate_energy_forecast(0),
-                    3,
-                )
+            if not self._forecast_entity_id is None:
+                self._states[SensorType.forecast_today] = round(
+                        self._calculate_energy_forecast(0),
+                        3
+                    )
 
             
-            self._states[SensorType.forecast_today_remaining] = round(
-                    self._calculate_energy_forecast_remaing_today(),
-                    3,
-                )
-            
-            self._states[SensorType.forecast_tomorrow] = round(
-                    self._calculate_energy_forecast(1),
-                    3,
-                )
-            
-            # All data processed -> notify sensors for updated values
-            self._update_API_call_sensor()
-            self._notify_listeners()
+                self._states[SensorType.forecast_today_remaining] = round(
+                        self._calculate_energy_forecast_remaing_today(),
+                        3
+                    )
+                
+                self._states[SensorType.forecast_tomorrow] = round(
+                        self._calculate_energy_forecast(1),
+                        3
+                    )
+                
+                # All data processed -> notify sensors for updated values
+                
+                self._notify_listeners()
             #_LOGGER.debug("set forecast state complete")
         except Exception as err:
-            _LOGGER.error("set_forecast_states : %s", err)
+            #_LOGGER.error("set_forecast_states : %s", traceback.format_exc())
+            pass
     
     async def update_forecast(self, *args):
         """Update forecast state."""
@@ -424,6 +426,7 @@ class SolcastRooftopSite(SolcastAPI):
                         await asyncio.sleep(5e-3)  # Wait 5ms for database persistence
 
                     self.set_forecast_states()
+                    self._update_API_call_sensor()
 
                     _LOGGER.debug("Updated forecasts from Solcast API")
 
@@ -470,7 +473,7 @@ class SolcastRooftopSite(SolcastAPI):
         try:
             e_total = 0.0
             startdate = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).astimezone() + timedelta(days=addDays)
-            enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0).astimezone() + timedelta(days=addDays)
+            enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0).astimezone()
             for forecast in self._forecasts:
                 f_start = forecast["period_start"]
                 f_end = forecast["period_end"]
@@ -479,7 +482,6 @@ class SolcastRooftopSite(SolcastAPI):
                     #power = forecast["pv_estimate"]  # in kW
                     #energy = power * 0.5
                     e_total += forecast["pv_estimate"]
-            #_LOGGER.debug("_calculate_energy_forecast: start: %s  end: %s,  total: %s",startdate, enddate, e_total)
             return e_total
         except Exception:
             #_LOGGER.error("_calculate_energy_forecast: %s", traceback.format_exc())
