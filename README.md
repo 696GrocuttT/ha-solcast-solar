@@ -13,6 +13,15 @@ Modified from the great works of
 ## Basic Installation/Configuration Instructions:
 Add a new HA Integration selecting 'Solcast PV Solar'
 
+Setup the Recorder to record data.. something like
+```
+recorder:
+  purge_keep_days: 31
+  include:
+    entity_globs:
+      - sensor.solcast*
+```
+
 ![integration](https://user-images.githubusercontent.com/1471841/135556342-bd92b717-61ee-4dcd-95ed-2694714489bf.png)
 
 #### Getting a Solcast API Key:
