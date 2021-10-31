@@ -286,7 +286,12 @@ class SolcastRooftopSite(SolcastAPI):
                     ac = self._states[SensorType.api_count]
                     if isinstance(ac, int):
                         self._api_remaining = int(ac)
-
+                    else:
+                        ac = int(ac)
+                        #make sure we dont get an error
+                        if not isinstance(ac, int):
+                            ac = 0
+                        
                     location, elevation = get_astral_location(self._hass)
                     next_setting = get_location_astral_event_next(
                         location, elevation, SUN_EVENT_SUNSET, dt_util.utcnow()
@@ -295,36 +300,41 @@ class SolcastRooftopSite(SolcastAPI):
                     if next_setting > dt_util.now():
                         _LOGGER.debug("No updates to schedule for today. Sunset already. Will create a new schedule at sunrise tomorrow. You can use the Solcast PV Forecast: update_forecast service call to get call the API right now.")
                     else:
-                        _LOGGER.debug(f"Sun will set at {next_setting - timedelta(hours=1)}")
+                        remove = 6
+                        if ac > 0:
+                            if (ac - remove) == 0:
+                                remove = 7
 
-                        _LOGGER.debug("setting up the times to run forecast updates")
+                            _LOGGER.debug(f"Sun will set at {next_setting - timedelta(hours=1)}")
 
-                        ## if last update time was more than an hour
-                        ## if it was less than an hour add to delay
-                        s = (dt_util.now().timestamp() - last_api_call_datetime.timestamp())
+                            _LOGGER.debug("setting up the times to run forecast updates")
 
-                        delay = (next_setting - dt_util.utcnow()) / (self._api_remaining - 6)
+                            ## if last update time was more than an hour
+                            ## if it was less than an hour add to delay
+                            s = (dt_util.now().timestamp() - last_api_call_datetime.timestamp())
 
-                        _LOGGER.debug(f"During the day, there will be {self._api_remaining} updates delayed by {delay} each")
+                            delay = (next_setting - dt_util.utcnow()) / (ac - remove)
 
-                        s = delay.total_seconds() - s
+                            _LOGGER.debug(f"During the day, there will be {ac} updates delayed by {delay} each")
 
-                        time_before_start = False
-                        if s > 0:
-                            time_before_start = True
-                        # Schedule updates over the day (starting on 0 to process early morning update)
-                        for i in range(0, self._api_remaining):
-                            exec_delay = (delay.total_seconds() * i)
-                            exec_time = dt_util.utcnow() + timedelta(seconds=exec_delay) 
+                            s = delay.total_seconds() - s
 
-                            if time_before_start:
-                                exec_delay = exec_delay + s
+                            time_before_start = False
+                            if s > 0:
+                                time_before_start = True
+                            # Schedule updates over the day (starting on 0 to process early morning update)
+                            for i in range(0, ac):
+                                exec_delay = (delay.total_seconds() * i)
                                 exec_time = dt_util.utcnow() + timedelta(seconds=exec_delay) 
-                            
-                            _LOGGER.debug(f"Forecast update scheduled update at {exec_time.astimezone().isoformat()}")
-                            async_call_later(self._hass, exec_delay, self.update_forecast)
 
-                        #self.set_forecast_states()
+                                if time_before_start:
+                                    exec_delay = exec_delay + s
+                                    exec_time = dt_util.utcnow() + timedelta(seconds=exec_delay) 
+                                
+                                _LOGGER.debug(f"Forecast update scheduled update at {exec_time.astimezone().isoformat()}")
+                                async_call_later(self._hass, exec_delay, self.update_forecast)
+                        else:
+                            _LOGGER.debug("Zero API calls remain for use today. Will create a new schedule tomorrow when the API limit is reset")
                 except Exception:
                     _LOGGER.error("sunrise_call_action: %s", traceback.format_exc())
 
