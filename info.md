@@ -7,6 +7,10 @@ Complete re write. v2.0 now
 ### Changes
 
 - Lots
+- New service call function for update forecasts and delete all forecast data
+- saves forecast data into the DB
+- limit api calls setting
+- much much more
 
 ### Polling Imformation
 
