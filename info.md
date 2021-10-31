@@ -3,6 +3,15 @@
 Complete re write. v2.0 now 
 - uses recorder to save forecast data, api count, last api call datetime
 
+Make sure that the Recorder setting in the configuration.yaml file include the solcast integration items.. something like
+```
+recorder:
+  purge_keep_days: 31
+  include:
+    entity_globs:
+      - sensor.solcast*
+```
+
 
 ### Changes
 
