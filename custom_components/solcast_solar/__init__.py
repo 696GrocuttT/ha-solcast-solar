@@ -64,11 +64,12 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
         for service in _SERVICE_MAP:
             hass.services.async_register(DOMAIN, service, execute_service)
 
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
         # start periodic request of new data
         await rooftop_site.start_periodic_update()
 
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
+        
         return True
     except Exception as err:
         _LOGGER.error("async_setup_entry: %s",traceback.format_exc())
@@ -288,16 +289,16 @@ class SolcastRooftopSite(SolcastAPI):
                         self._api_remaining = int(ac)
                     else:
                         ac = int(ac)
-                        #make sure we dont get an error
-                        if not isinstance(ac, int):
-                            ac = 0
                         
                     location, elevation = get_astral_location(self._hass)
                     next_setting = get_location_astral_event_next(
                         location, elevation, SUN_EVENT_SUNSET, dt_util.utcnow()
                     ) + timedelta(hours=1)
                     
-                    if next_setting > dt_util.now():
+                    #_LOGGER.warn(next_setting)
+                    #_LOGGER.warn(dt_util.utcnow())
+                    
+                    if next_setting < dt_util.utcnow():
                         _LOGGER.debug("No updates to schedule for today. Sunset already. Will create a new schedule at sunrise tomorrow. You can use the Solcast PV Forecast: update_forecast service call to get call the API right now.")
                     else:
                         remove = 6
@@ -647,6 +648,5 @@ class SolcastRooftopSite(SolcastAPI):
                     return None
         except Exception:
             _LOGGER.error("get_energy_tab_data: %s", traceback.format_exc())
-
 
 
