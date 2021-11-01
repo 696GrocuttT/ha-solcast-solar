@@ -67,7 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
         # start periodic request of new data
-        await rooftop_site.start_periodic_update()
+        #await rooftop_site.start_periodic_update()
+        async_call_later(hass, 1, rooftop_site.start_periodic_update())
 
         
         return True
@@ -265,7 +266,7 @@ class SolcastRooftopSite(SolcastAPI):
         except Exception:
             _LOGGER.error("delete_stored_forecast_data: %s", traceback.format_exc())
     
-    async def start_periodic_update(self):
+    def start_periodic_update(self):
         """Start periodic data polling."""
 
         try:
@@ -285,10 +286,11 @@ class SolcastRooftopSite(SolcastAPI):
                     last_api_call_datetime = self.get_last_update_datetime()
                     
                     ac = self._states[SensorType.api_count]
+                    _LOGGER.warn(ac)
                     if isinstance(ac, int):
                         self._api_remaining = int(ac)
                     else:
-                        ac = int(ac)
+                        ac=0
                         
                     location, elevation = get_astral_location(self._hass)
                     next_setting = get_location_astral_event_next(
