@@ -56,8 +56,8 @@ class SolcastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_RESOURCE_ID, default=""): str,
                     #vol.Optional(CONF_AUTO_FORCAST, default=False): bool,
                     #vol.Optional(CONF_AUTO_HISTORY, default=False): bool,
-                    vol.Optional(CONF_API_LIMIT, default=50): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=50)
+                    vol.Optional(CONF_API_LIMIT, default=40): vol.All(
+                        vol.Coerce(int), vol.Range(min=1, max=40)
                     ),
                     vol.Optional(CONF_SSL_DISABLE, default=False): boolean,
                 }
@@ -102,7 +102,7 @@ class SolcastSolarOptionFlowHandler(OptionsFlow):
                     vol.Required(
                         CONF_API_LIMIT,
                         default=self.config_entry.options[CONF_API_LIMIT],
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=40)),
                     vol.Required(
                         CONF_SSL_DISABLE,
                         default=self.config_entry.options.get(CONF_SSL_DISABLE),
