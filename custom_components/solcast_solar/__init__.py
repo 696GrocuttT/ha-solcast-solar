@@ -304,7 +304,7 @@ class SolcastRooftopSite(SolcastAPI):
                     ##_LOGGER.warn(next_setting)
                     #_LOGGER.warn(dt_util.utcnow())
                     
-                    if next_setting > dt_util.utcnow():
+                    if next_setting < dt_util.utcnow():
                         _LOGGER.debug("No updates to schedule for today. Sunset already. Will create a new schedule at sunrise tomorrow. You can use the Solcast PV Forecast: update_forecast service call to get call the API right now.")
                     else:
                         if ac > 0:
