@@ -1,5 +1,9 @@
 ### Breaking Changes
 
+v2.1.1
+Better databasing of data
+new events to control deleting all data and fetching all data
+
 Complete re write. v2.0 now 
 - uses recorder to save forecast data, api count, last api call datetime
 
