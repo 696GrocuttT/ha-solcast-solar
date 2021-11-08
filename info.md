@@ -1,4 +1,9 @@
-### Breaking Changes
+### Changes
+
+v2.1.2
+Fixed the not updating every hour problem
+Added a new event 'solcast_log_debug_data' to log out debug information 
+
 
 v2.1.1
 Better databasing of data
