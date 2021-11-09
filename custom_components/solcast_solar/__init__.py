@@ -691,5 +691,3 @@ class SolcastRooftopSite(SolcastAPI):
                     return None
         except Exception:
             _LOGGER.error("get_energy_tab_data: %s", traceback.format_exc())
-
-
