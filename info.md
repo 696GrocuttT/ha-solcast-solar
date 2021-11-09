@@ -1,5 +1,8 @@
 ### Changes
 
+v2.1.3
+forecast values for today and remaining today where not correct after the first api fetch
+
 v2.1.2
 Fixed the not updating every hour problem
 Added a new event 'solcast_log_debug_data' to log out debug information 

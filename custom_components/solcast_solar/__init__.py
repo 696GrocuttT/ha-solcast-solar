@@ -335,7 +335,7 @@ class SolcastRooftopSite(SolcastAPI):
             self._debugData["auto_fetch_timer_object"] = (self._auto_fetch_tracker is not None)
 
             _LOGGER.debug("created auto forecast fetch hourly timer")
-            _LOGGER.debug("Remeber that even though its every hour, the api will only connect between the hours %s and %s",self._starthour,self._finishhour)
+            _LOGGER.debug("Remeber that even though its every hour, the api will only connect between the hours %s and %s and at midnight",self._starthour,self._finishhour)
 
         except Exception:
             _LOGGER.error("setup_auto_fetch: %s", traceback.format_exc())
@@ -380,7 +380,7 @@ class SolcastRooftopSite(SolcastAPI):
                 session.query(Events).filter(Events.event_type == self._entry_id).delete(synchronize_session=False)
                 session.commit()
             
-            _LOGGER.warn("Event: 'solcast_delete_all_forecasts' called.. All Forecast data is being deleted for %s", self._resource_id)
+            _LOGGER.warning("Event: 'solcast_delete_all_forecasts' called.. All Forecast data is being deleted for %s", self._resource_id)
             self._forecasts = None
             self._states[SensorType.forecast_today] = 0
             self._states[SensorType.forecast_today_remaining] = 0
@@ -399,35 +399,6 @@ class SolcastRooftopSite(SolcastAPI):
         except Exception:
             _LOGGER.error("log_debug_data: %s", traceback.format_exc())
 
-    def set_forecast_states(self):
-        try:
-            if not self._forecast_entity_id is None:
-                self._states[SensorType.forecast_today] = round(
-                        self._calculate_energy_forecast(0),
-                        3
-                    )
-
-            
-                self._states[SensorType.forecast_today_remaining] = round(
-                        self._calculate_energy_forecast_remaing_today(),
-                        3
-                    )
-                
-                self._states[SensorType.forecast_tomorrow] = round(
-                        self._calculate_energy_forecast(1),
-                        3
-                    )
-
-                self._notify_listeners(SensorType.forecast_today)
-                self._notify_listeners(SensorType.forecast_today_remaining)
-                self._notify_listeners(SensorType.forecast_tomorrow)
-                
-                # All data processed -> notify sensors for updated values
-                
-            #_LOGGER.debug("set forecast state complete")
-        except Exception as err:
-            _LOGGER.error("set_forecast_states : %s", traceback.format_exc())
-
     async def update_forecast(self, checktime:bool = True):
         """Update forecast state."""
 
@@ -439,7 +410,7 @@ class SolcastRooftopSite(SolcastAPI):
             else:
                 _doUpdate = True
                 if checktime:
-                    _LOGGER.warning("Update forecast by api call has been called.. checking if it is within sun rise/set times to proceed or not")
+                    _LOGGER.debug("Update forecast by api call has been called.. checking if it is within sun rise/set times to proceed or not")
                     self._debugData["update_forecast_by_time_last_called"] = dt_util.now().astimezone().isoformat()
                     _hournow = dt_util.now().hour
                     if _hournow == 0 or (_hournow > self._starthour and _hournow < self._finishhour):
@@ -504,21 +475,73 @@ class SolcastRooftopSite(SolcastAPI):
                 await self._notify_listeners(SensorType.api_count)
                 self._debugData["api_call_counter"] = self._api_used
                 
-                self._states[SensorType.forecast_today] = round(
-                        self._calculate_energy_forecast(0),
-                        3
-                    )
 
-            
-                self._states[SensorType.forecast_today_remaining] = round(
-                        self._calculate_energy_forecast_remaing_today(),
-                        3
-                    )
-                
-                self._states[SensorType.forecast_tomorrow] = round(
-                        self._calculate_energy_forecast(1),
-                        3
-                    )
+                with session_scope(hass=self._hass) as session:
+                    #all today
+                    e_total = 0.0
+                    startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0) #+ timedelta(days=addDays)
+                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0)
+
+                    events: list[Events] = (
+                            session.query(Events.event_data)
+                                .filter(Events.event_type == self._entry_id,
+                                        Events.time_fired > startdate,
+                                        Events.time_fired < enddate)
+                                )
+
+                    event_s: list[int] = [event.event_data for event in events]
+                    
+                    if event_s:
+                        for item in event_s:
+                            item = json.loads(item)
+                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
+                        self._states[SensorType.forecast_today] = round(e_total, 3)
+                    else:
+                        self._states[SensorType.forecast_today] = round(e_total, 3)
+
+                    #tomorrow
+                    e_total = 0.0
+                    startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0)
+
+                    events: list[Events] = (
+                            session.query(Events.event_data)
+                                .filter(Events.event_type == self._entry_id,
+                                        Events.time_fired > startdate,
+                                        Events.time_fired < enddate)
+                                )
+
+                    event_s: list[int] = [event.event_data for event in events]
+                    
+                    if event_s:
+                        for item in event_s:
+                            item = json.loads(item)
+                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
+                        self._states[SensorType.forecast_tomorrow] = round(e_total, 3)
+                    else:
+                        self._states[SensorType.forecast_tomorrow] = round(e_total, 3)
+
+                    #left today forecast
+                    e_total = 0.0
+                    startdate = dt_util.now().replace(second=0,microsecond=0) #.astimezone()
+                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0) #.astimezone()
+
+                    events: list[Events] = (
+                            session.query(Events.event_data)
+                                .filter(Events.event_type == self._entry_id,
+                                        Events.time_fired > startdate,
+                                        Events.time_fired < enddate)
+                                )
+
+                    event_s: list[int] = [event.event_data for event in events]
+                    
+                    if event_s:
+                        for item in event_s:
+                            item = json.loads(item)
+                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
+                        self._states[SensorType.forecast_today_remaining] = round(e_total, 3)
+                    else:
+                        self._states[SensorType.forecast_today_remaining] = round(e_total, 3)
 
                 await self._notify_listeners(SensorType.forecast_today)
                 await self._notify_listeners(SensorType.forecast_today_remaining)
@@ -566,50 +589,6 @@ class SolcastRooftopSite(SolcastAPI):
             #_LOGGER.debug("Notified %d sensor listeners", d)
         except Exception:
             _LOGGER.error("_notify_listeners: %s", traceback.format_exc())
-
-    def _calculate_energy_forecast(self, addDays:int = 0):
-        """Calculate the total forecasted energy for the given day."""
-        try:
-            #_LOGGER.error("_calculate_energy_forecast: %s", addDays)
-            e_total = 0.0
-            startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=addDays)
-            enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0)
-            for forecast in self._forecasts:
-                #f_start = forecast["period_start"]
-                f_end = forecast["period_end"]
-                #if f_start >= startdate and f_end <= enddate:
-                if f_end >= startdate and f_end <= enddate:
-                    #hours = forecast["period"].total_seconds() / 3600
-                    #power = forecast["pv_estimate"]  # in kW
-                    #energy = power * 0.5
-                    #_LOGGER.error("found start: %s end: %s gross: %s", f_start, f_end, power)
-                    e_total += forecast["pv_estimate"]
-            #_LOGGER.error("_calculate_energy_forecast: %s start: %s end: %s gross: %s", startdate, enddate, e_total)
-            return e_total
-        except Exception:
-            #_LOGGER.error("_calculate_energy_forecast: %s", traceback.format_exc())
-            return 0
-
-    def _calculate_energy_forecast_remaing_today(self):
-        """Calculate the total forecasted energy for the given day."""
-        try:
-            e_total = 0.0
-            startdate = dt_util.now().replace(second=0,microsecond=0) #.astimezone()
-            enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0) #.astimezone()
-            for forecast in self._forecasts:
-                #f_start = forecast["period_start"]
-                f_end = forecast["period_end"]
-                #if f_start >= startdate and f_end <= enddate:
-                if f_end >= startdate and f_end <= enddate:
-                    #hours = forecast["period"].total_seconds() / 3600
-                    #power = forecast["pv_estimate"]  # in kW
-                    #energy = power * hours
-                    e_total += forecast["pv_estimate"]
-            #_LOGGER.debug("_calculate_energy_forecast_remaing_today: start: %s  end: %s,  total: %s",startdate, enddate, e_total)
-            return e_total
-        except Exception:
-            #_LOGGER.error("_calculate_energy_forecast_remaing_today: %s", traceback.format_exc())
-            return 0
 
     async def _fetch_forecasts(self) -> bool:
         """Fetch the forecasts for this rooftop site."""
