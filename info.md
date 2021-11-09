@@ -1,5 +1,8 @@
 ### Changes
 
+v2.1.4
+moved the graph over by 30min.. lines up much nicer now
+
 v2.1.3
 forecast values for today and remaining today where not correct after the first api fetch
 

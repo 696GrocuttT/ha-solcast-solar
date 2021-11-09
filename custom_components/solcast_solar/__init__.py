@@ -671,7 +671,7 @@ class SolcastRooftopSite(SolcastAPI):
                     for item in event_s:
                         item = json.loads(item)
 
-                        timestamp = parse_datetime(item['period_end'])
+                        timestamp = parse_datetime(item['period_end']) - timedelta(minutes=30)
                         energy = float(item["pv_estimate"]*1000) #* 0.5
                         #wh_hours
                         d = datetime(timestamp.year, timestamp.month, timestamp.day, timestamp.hour , 0, 0)
