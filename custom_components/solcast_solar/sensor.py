@@ -131,7 +131,6 @@ class SolcastSensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Add update callback after being added to hass."""
         await super().async_added_to_hass()
-
         state = await self.async_get_last_state()
         if state:
             self._state = state.state

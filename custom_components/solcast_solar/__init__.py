@@ -1,5 +1,4 @@
 """Support for Solcast PV forecast."""
-import asyncio
 import json
 import logging
 import traceback
@@ -9,29 +8,18 @@ from operator import itemgetter
 
 import aiohttp
 import homeassistant.util.dt as dt_util
-import voluptuous as vol
 from homeassistant.components.recorder.models import Events
-#from homeassistant.components.recorder.purge import _purge_event_ids
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.config_entries import ConfigEntry
 
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, EVENT_STATE_CHANGED,
-                                    STATE_UNAVAILABLE, STATE_UNKNOWN,
-                                    SUN_EVENT_SUNSET)
-from homeassistant.core import Event, EventOrigin, HomeAssistant
+from homeassistant.const import CONF_API_KEY, SUN_EVENT_SUNSET
+from homeassistant.core import HomeAssistant
 
-from homeassistant.helpers.event import (async_call_later,
-                                            async_track_time_change,
-                                            async_track_utc_time_change)
-from homeassistant.helpers.sun import (get_astral_location,
-                                        get_location_astral_event_next)
+from homeassistant.helpers.event import async_call_later, async_track_utc_time_change
+from homeassistant.helpers.sun import get_astral_location, get_location_astral_event_next
 from isodate import parse_datetime
 
-from .const import (CONF_RESOURCE_ID, CONF_SOLCAST_URL, CONF_SSL_DISABLE,
-                    DOMAIN, CONF_AUTO_FETCH)
-
-#from sqlalchemy.sql.functions import count
-
+from .const import CONF_RESOURCE_ID, CONF_SOLCAST_URL, CONF_SSL_DISABLE,DOMAIN, CONF_AUTO_FETCH
 
 PLATFORMS = ["sensor"]
 
@@ -42,23 +30,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up solcast parameters."""
 
     try:
-        #hass.config_entries
         api_key = entry.options[CONF_API_KEY]
         resource_id = entry.options[CONF_RESOURCE_ID]
         auto_fetch = entry.options[CONF_AUTO_FETCH]
         disable_ssl = entry.options[CONF_SSL_DISABLE]
-        #integration_name = DOMAIN + "-" + entry.title
 
         _LOGGER.debug("Setting up Solcast for rooftop id %s",resource_id)
         _LOGGER.debug("DB id %s",entry.entry_id)
 
         rooftop_site = SolcastRooftopSite(hass, api_key, resource_id, disable_ssl,entry.entry_id,auto_fetch)
 
-        #hass.data[entry.entry_id] = rooftop_site
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = rooftop_site
 
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
 
         entry.async_on_unload(entry.add_update_listener(async_update_options))
 
@@ -68,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # start periodic request of new data
         await rooftop_site.start_periodic_update()
-        #async_call_later(hass, 1, rooftop_site.start_periodic_update())
         
         return True
     except Exception as err:
@@ -88,7 +71,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     try:
-        _LOGGER.debug("async_update_options called")
+        #_LOGGER.debug("async_update_options called")
         #await hass.config_entries.async_reload(entry.entry_id)
         coordinator: SolcastRooftopSite = hass.data[DOMAIN][entry.entry_id]
         coordinator._api_key = entry.options[CONF_API_KEY]
@@ -120,7 +103,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         coordinator: SolcastRooftopSite = hass.data[DOMAIN][entry.entry_id]
         if coordinator._auto_fetch_tracker:
-            _LOGGER.debug("async_remove_entry removed auto fetch timer")
+            #_LOGGER.debug("async_remove_entry removed auto fetch timer")
             coordinator._auto_fetch_tracker()
             coordinator._auto_fetch_tracker = None
 
@@ -176,7 +159,7 @@ class SolcastAPI:
             _LOGGER.error("request_data: %s", traceback.format_exc())
 
     def reset_api_used(self, *args):
-        _LOGGER.debug("reset_api_used has been reset back to its limit")
+        _LOGGER.debug("api call counter has been reset")
         self._api_used = 0
 
 class SolcastRooftopSite(SolcastAPI):
@@ -198,8 +181,6 @@ class SolcastRooftopSite(SolcastAPI):
         SensorType.last_updated: {}
     }
 
-    
-
     def __init__(self, hass, api_key, resource_id, disable_ssl, entryId, auto_fetch):
         """Initialize solcast rooftop site."""
 
@@ -209,8 +190,6 @@ class SolcastRooftopSite(SolcastAPI):
         self._resource_id = resource_id
         self._disable_ssl = disable_ssl
         self._forecast_entity_id = None
-        self._api_used = 0
-        self._last_updated = dt_util.now()
         self._update_listeners = []
         self._forecasts = self.get_stored_forecast_data()
         self._starthour = 6
@@ -232,11 +211,25 @@ class SolcastRooftopSite(SolcastAPI):
 
     def get_state(self, sensor_type):
         """Get Solcast rooftopsite states."""
-        return self._states[sensor_type]
+        #return self._states[sensor_type]
+        try:
+            if (sensor_type == SensorType.forecast_today) or (sensor_type == SensorType.forecast_tomorrow) or (sensor_type == SensorType.forecast_today_remaining):
+                return self.get_forecast_sensor_state(sensor_type)
+            else:
+                return self._states[sensor_type]
+        except Exception:
+            _LOGGER.error("get_state: %s", traceback.format_exc())
 
     def set_state(self, sensor_type, state):
         """Get Solcast rooftopsite states."""
-        self._states[sensor_type] = state
+        try:
+            if sensor_type == SensorType.api_count:
+                self._api_used = int(state)
+                self._debugData["api_call_counter"] = int(state)
+
+            self._states[sensor_type] = state
+        except Exception:
+            _LOGGER.error("set_state: %s", traceback.format_exc())
 
     def get_attributes(self, sensor_type):
         """Get Solcast rooftopsite attributes."""
@@ -246,22 +239,23 @@ class SolcastRooftopSite(SolcastAPI):
         """Return the attributes."""
         try:
             return {"resource_id": self._resource_id}
-        except Exception as err:
-            _LOGGER.error("get_extra_state_attributes: %s", err)
+        except Exception:
+            _LOGGER.error("get_extra_state_attributes: %s", traceback.format_exc())
 
         return {}
 
-    def get_last_update_datetime(self):
-        """return the last time the api was successfully called"""
-        if self._states[SensorType.last_updated]:
-            return datetime.fromisoformat(self._states[SensorType.last_updated])
-
-        return dt_util.now() - timedelta(hours=1)
+    #def get_last_update_datetime(self):
+    #    """return the last time the api was successfully called"""
+    #    if self._states[SensorType.last_updated]:
+    #        _LOGGER.error("get_last_update_datetime %s",datetime.fromisoformat(self._states[SensorType.last_updated]))
+    #        return datetime.fromisoformat(self._states[SensorType.last_updated])
+    #    _LOGGER.error("no last update date value in state")
+    #    return dt_util.now() - timedelta(hours=1)
 
     def get_stored_forecast_data(self, fromDatetime:datetime = None, toDatetime:datetime = None):
         try:
             if fromDatetime is None:
-                fromDatetime = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+                fromDatetime = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=1)
                 toDatetime = datetime.now().replace(hour=23,minute=59,second=59,microsecond=0) + timedelta(days=1)
 
             fromDatetime = fromDatetime.astimezone().strftime("%Y-%m-%d %H:%M")
@@ -269,36 +263,27 @@ class SolcastRooftopSite(SolcastAPI):
 
             with session_scope(hass=self._hass) as session:
                 events: list[Events] = (
-                    #session.query(Events.event_data).filter( 
-                    #and_(
-                    #    Events.event_type == self._entry_id, 
-                    #    Events.time_fired >= fromDatetime,
-                    #    Events.time_fired <= toDatetime
-                    #    )
-                    #)
+
                     session.query(Events.event_data).filter( 
                         Events.event_type == self._entry_id, 
                         Events.time_fired >= fromDatetime,
                         Events.time_fired <= toDatetime
                     )
                 )
+
                 event_s: list[int] = [event.event_data for event in events]
 
                 if event_s:
                     f = []
                     for forecast in event_s:
                         forecast = json.loads(forecast)
-                        # Convert period_end and period. All other fields should already be the correct type
                         forecast["period_end"] = parse_datetime(forecast["period_end"])
-                        #forecast["period"] = parse_duration(forecast["period"])
-                        #forecast["period_start"] = forecast["period_end"] - forecast["period"]
                         forecast["pv_estimate"] = float(forecast["pv_estimate"])
 
                         f.append(forecast)
 
                     return f
                 else:
-                    #_LOGGER.warn("add nothing to get_stored_forecast_data")
                     return None
 
         except Exception:
@@ -306,20 +291,21 @@ class SolcastRooftopSite(SolcastAPI):
             return None
     
     async def do_update_been_aloong_time(self):
-        """ddd"""
+        """do_update_been_aloong_time"""
+        try:
 
-        _LOGGER.debug("its been over an hour since last api call for forecsat data")
-
-        hn = dt_util.now().astimezone().hour
-        
-        if hn >= self._starthour and hn <=self._finishhour:
-            #first run or database was deleted but integration still active
-            #await self.update_forecast(checktime=False)
-            async_call_later(self._hass, 1, self.update_forecast_service)
-            _LOGGER.debug("going to update call the api to update forecsat data")
-        else:
-            _LOGGER.debug("its outside of api calling time (sun rise-set) no api call")
+            hn = dt_util.now().astimezone().hour
             
+            if hn >= self._starthour and hn <=self._finishhour:
+                #first run or database was deleted but integration still active
+                #await self.update_forecast(checktime=False)
+                async_call_later(self._hass, 1, self.update_forecast_service)
+                _LOGGER.debug("been over an hour since the last update, going to call the solcast api to update forecsat data")
+            else:
+                _LOGGER.debug("been over an hour since the last update, but its outside of api calling time (sun rise-set) no api call")
+        except Exception:
+            _LOGGER.error("do_update_been_aloong_time: %s", traceback.format_exc())
+
     async def setup_auto_fetch(self):
         try:
             _LOGGER.debug("registering API auto fetching hourly between sun up and sun set")
@@ -335,7 +321,7 @@ class SolcastRooftopSite(SolcastAPI):
             self._debugData["auto_fetch_timer_object"] = (self._auto_fetch_tracker is not None)
 
             _LOGGER.debug("created auto forecast fetch hourly timer")
-            _LOGGER.debug("Remeber that even though its every hour, the api will only connect between the hours %s and %s and at midnight",self._starthour,self._finishhour)
+            _LOGGER.debug("Remember that even though its every hour, the api will only connect between the hours %s and %s and at midnight",self._starthour,self._finishhour)
 
         except Exception:
             _LOGGER.error("setup_auto_fetch: %s", traceback.format_exc())
@@ -344,16 +330,13 @@ class SolcastRooftopSite(SolcastAPI):
         """Start periodic data polling."""
 
         try:
-            
             # Register API limit reset
-            _LOGGER.debug("registering API limit reset")
-            async_track_utc_time_change(self._hass, self.reset_api_used, hour=0, minute=0, second=0, local=True)
+            _LOGGER.debug("registering API limit reset for UTC midnight")
+            async_track_utc_time_change(self._hass, self.reset_api_used, hour=0, minute=0, second=0, local=False)
 
             if self._forecasts is None:
                 #first run or database was deleted but integration still active
-                #await self.update_forecast(checktime=False)
                 async_call_later(self._hass, 1, self.update_forecast_service)
-                
 
             if self._auto_fetch:
                 await self.setup_auto_fetch()
@@ -363,13 +346,95 @@ class SolcastRooftopSite(SolcastAPI):
         except Exception:
             _LOGGER.error("start_periodic_update: %s", traceback.format_exc())
 
+    def get_forecast_sensor_state(self, sensor_type:SensorType = None):
+        """ update ha values to display"""
+        try:
+            #use a session to get the data from the database
+            with session_scope(hass=self._hass) as session:
+                #all today
+                if sensor_type == SensorType.forecast_today:
+                    e_total = 0.0
+                    startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0).astimezone() #+ timedelta(days=addDays)
+                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0).astimezone()
+
+                    startdate = startdate.strftime("%Y-%m-%d %H:%M")
+                    enddate = enddate.strftime("%Y-%m-%d %H:%M")
+
+                    events: list[Events] = (
+                            session.query(Events.event_data)
+                                .filter(Events.event_type == self._entry_id,
+                                        Events.time_fired > startdate,
+                                        Events.time_fired < enddate)
+                                )
+
+                    event_s: list[int] = [event.event_data for event in events]
+                    
+                    if event_s:
+                        for item in event_s:
+                            item = json.loads(item)
+                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
+                    #self._states[SensorType.forecast_today] = round(e_total, 3)
+                    return round(e_total, 3)
+
+                elif sensor_type == SensorType.forecast_tomorrow:
+                    #tomorrow
+                    e_total = 0.0
+                    startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0).astimezone() + timedelta(days=1)
+                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0).astimezone()
+
+                    startdate = startdate.strftime("%Y-%m-%d %H:%M")
+                    enddate = enddate.strftime("%Y-%m-%d %H:%M")
+
+                    events: list[Events] = (
+                            session.query(Events.event_data)
+                                .filter(Events.event_type == self._entry_id,
+                                        Events.time_fired > startdate,
+                                        Events.time_fired < enddate)
+                                )
+
+                    event_s: list[int] = [event.event_data for event in events]
+                    
+                    if event_s:
+                        for item in event_s:
+                            item = json.loads(item)
+                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
+                    #self._states[SensorType.forecast_tomorrow] = round(e_total, 3)
+                    return round(e_total, 3)
+
+                elif sensor_type == SensorType.forecast_today_remaining:
+                    #left today forecast
+                    e_total = 0.0
+                    startdate = dt_util.now().replace(second=0,microsecond=0).astimezone()
+                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0).astimezone()
+
+                    startdate = startdate.strftime("%Y-%m-%d %H:%M")
+                    enddate = enddate.strftime("%Y-%m-%d %H:%M")
+
+                    events: list[Events] = (
+                            session.query(Events.event_data)
+                                .filter(Events.event_type == self._entry_id,
+                                        Events.time_fired > startdate,
+                                        Events.time_fired < enddate)
+                                )
+
+                    event_s: list[int] = [event.event_data for event in events]
+                    
+                    if event_s:
+                        for item in event_s:
+                            item = json.loads(item)
+                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
+                    #self._states[SensorType.forecast_today_remaining] = round(e_total, 3)
+                    return round(e_total, 3)
+
+        except Exception:
+            _LOGGER.error("get_forecast_sensor_state: %s", traceback.format_exc())
+
     async def update_forecast_service(self, param=None):
         """Update forecast state service call."""
         try:
-            await self.update_forecast(checktime=False)
             _LOGGER.debug("Update forecast service called for rooftop id %s", self._resource_id)
-            #self._hass.bus.fire("solcast_update_forecast_service", {"answer": 42})
-            self._notify_listeners()
+            await self.update_forecast(checktime=False)
+            
         except Exception:
             _LOGGER.error("update_forecast_service: %s", traceback.format_exc())
 
@@ -380,11 +445,14 @@ class SolcastRooftopSite(SolcastAPI):
                 session.query(Events).filter(Events.event_type == self._entry_id).delete(synchronize_session=False)
                 session.commit()
             
-            _LOGGER.warning("Event: 'solcast_delete_all_forecasts' called.. All Forecast data is being deleted for %s", self._resource_id)
+            _LOGGER.warning("Event: 'solcast_delete_all_forecasts' called.. All Forecast data is being deleted for rooftop id %s", self._resource_id)
             self._forecasts = None
-            self._states[SensorType.forecast_today] = 0
-            self._states[SensorType.forecast_today_remaining] = 0
-            self._states[SensorType.forecast_tomorrow] = 0
+            self.set_state(SensorType.forecast_today, 0.0)
+            self.set_state(SensorType.forecast_tomorrow, 0.0)
+            self.set_state(SensorType.forecast_today_remaining, 0.0)
+            #self._states[SensorType.forecast_today] = 0
+            #self._states[SensorType.forecast_today_remaining] = 0
+            #self._states[SensorType.forecast_tomorrow] = 0
 
             await self._notify_listeners(SensorType.forecast_today)
             await self._notify_listeners(SensorType.forecast_today_remaining)
@@ -407,6 +475,7 @@ class SolcastRooftopSite(SolcastAPI):
                     _LOGGER.warning(
                         "Solcast entities not yet registered, try again next day"
                     )
+                    return
             else:
                 _doUpdate = True
                 if checktime:
@@ -418,7 +487,7 @@ class SolcastRooftopSite(SolcastAPI):
                     else:
                         _doUpdate = False
                 else:
-                    self._debugData["update_forecast_not_by_time_last_called"] = dt_util.now().astimezone().isoformat()
+                    self._debugData["forced_update_forecast_not_by_time_last_called"] = dt_util.now().astimezone().isoformat()
 
                 if _doUpdate:
                     if not await self._fetch_forecasts():
@@ -426,7 +495,7 @@ class SolcastRooftopSite(SolcastAPI):
                         
                     else:
                         # Process data in case the forecast entity is already registered
-                        _LOGGER.debug("Forecast successfully fetched and entity available")
+                        _LOGGER.debug("Forecast successfully fetched for rooftop id %s", self._resource_id)
 
                         _insert_items = []
                         with session_scope(hass=self._hass) as session:
@@ -461,88 +530,19 @@ class SolcastRooftopSite(SolcastAPI):
                                     
                         session.commit()
 
-                        _LOGGER.debug("Updated forecasts from Solcast API")
+                        _LOGGER.debug("Updated forecasts from Solcast API for roofop id %s", self._resource_id)
 
-                        self._states[SensorType.last_updated] = dt_util.now().isoformat() #dt_util.now().strftime("%Y%m%d%H%M%S")
+                        self.set_state(SensorType.last_updated, dt_util.now().isoformat())
+                        #self._states[SensorType.last_updated] = dt_util.now().isoformat() #dt_util.now().strftime("%Y%m%d%H%M%S")
                         await self._notify_listeners(SensorType.last_updated)  
+                        
+                        self.set_state(SensorType.api_count, self._api_used)
+                        #self._states[SensorType.api_count] = self._api_used
+                        await self._notify_listeners(SensorType.api_count)  
                 else:
                     _LOGGER.debug("Forecast update called, but was not told to actually make the api call")
-                #update the ha view of the states every hour  
-                #self._update_API_call_sensor()
-                #self._update_last_updated_sensor()  
-
-                self._states[SensorType.api_count] = self._api_used
-                await self._notify_listeners(SensorType.api_count)
-                self._debugData["api_call_counter"] = self._api_used
                 
-
-                with session_scope(hass=self._hass) as session:
-                    #all today
-                    e_total = 0.0
-                    startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0) #+ timedelta(days=addDays)
-                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0)
-
-                    events: list[Events] = (
-                            session.query(Events.event_data)
-                                .filter(Events.event_type == self._entry_id,
-                                        Events.time_fired > startdate,
-                                        Events.time_fired < enddate)
-                                )
-
-                    event_s: list[int] = [event.event_data for event in events]
-                    
-                    if event_s:
-                        for item in event_s:
-                            item = json.loads(item)
-                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
-                        self._states[SensorType.forecast_today] = round(e_total, 3)
-                    else:
-                        self._states[SensorType.forecast_today] = round(e_total, 3)
-
-                    #tomorrow
-                    e_total = 0.0
-                    startdate = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0)
-
-                    events: list[Events] = (
-                            session.query(Events.event_data)
-                                .filter(Events.event_type == self._entry_id,
-                                        Events.time_fired > startdate,
-                                        Events.time_fired < enddate)
-                                )
-
-                    event_s: list[int] = [event.event_data for event in events]
-                    
-                    if event_s:
-                        for item in event_s:
-                            item = json.loads(item)
-                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
-                        self._states[SensorType.forecast_tomorrow] = round(e_total, 3)
-                    else:
-                        self._states[SensorType.forecast_tomorrow] = round(e_total, 3)
-
-                    #left today forecast
-                    e_total = 0.0
-                    startdate = dt_util.now().replace(second=0,microsecond=0) #.astimezone()
-                    enddate = startdate.replace(hour=23, minute=59, second=59, microsecond=0) #.astimezone()
-
-                    events: list[Events] = (
-                            session.query(Events.event_data)
-                                .filter(Events.event_type == self._entry_id,
-                                        Events.time_fired > startdate,
-                                        Events.time_fired < enddate)
-                                )
-
-                    event_s: list[int] = [event.event_data for event in events]
-                    
-                    if event_s:
-                        for item in event_s:
-                            item = json.loads(item)
-                            e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
-                        self._states[SensorType.forecast_today_remaining] = round(e_total, 3)
-                    else:
-                        self._states[SensorType.forecast_today_remaining] = round(e_total, 3)
-
+                #update the ha view of the states every hour  
                 await self._notify_listeners(SensorType.forecast_today)
                 await self._notify_listeners(SensorType.forecast_today_remaining)
                 await self._notify_listeners(SensorType.forecast_tomorrow)
@@ -558,15 +558,20 @@ class SolcastRooftopSite(SolcastAPI):
 
             if listener.get_type() is SensorType.last_updated:
                 try:
-                    lu = datetime.fromisoformat(self._states[SensorType.last_updated])
-                    if (dt_util.now().astimezone().timestamp() - lu.timestamp()) > 3600:
-                        #been over an hour
-                        async_call_later(self._hass, 1, self.do_update_been_aloong_time)
-
-                    
-                    self._debugData["api_call_counter"] = self._states[SensorType.api_count]
+                    if not listener.state is None:
+                        lu = listener.state 
+                        if (dt_util.now().astimezone().timestamp() - lu.timestamp()) > 3600:
+                            #been over an hour
+                            self.do_update_been_aloong_time()
+                        else:
+                            #its been less than an hour so do nothing
+                            _LOGGER.debug("less than an hour since last update successfully called at %s", lu)
+                    else:
+                        #is none.. first time setup prolly
+                        self.do_update_been_aloong_time()
                 except Exception:
-                    self._debugData["api_call_counter"] = 0
+                    #_LOGGER.error("add_update_listener: %s", traceback.format_exc())
+                    pass
 
             # initial data is already loaded, thus update the component
             listener.update_callback()
@@ -576,16 +581,16 @@ class SolcastRooftopSite(SolcastAPI):
     async def _notify_listeners(self, type=None):
         """ Inform entities about updated values """
         try:
-            d = 0
+            #d = 0
             for listener in self._update_listeners:
                 if type is None:
                     # type is not defined -> inform all sensors
                     listener.update_callback()
-                    d += 1
+                    #d += 1
                 elif listener.get_type() is type:
                     # inform only defined type
                     listener.update_callback()
-                    d += 1
+                    #d += 1
             #_LOGGER.debug("Notified %d sensor listeners", d)
         except Exception:
             _LOGGER.error("_notify_listeners: %s", traceback.format_exc())
@@ -620,7 +625,7 @@ class SolcastRooftopSite(SolcastAPI):
                     fc = fc + resp.get("estimated_actuals")
                     self._debugData["api_called_past_forecast_last_called_successfully"] = dt_util.now().astimezone().isoformat()
                 else:
-                    _LOGGER.info("Didnt get estimated_actuals inside _fetch_forecasts")
+                    _LOGGER.info("Didnt get estimated_actuals inside _fetch_forecasts for %s", self._resource_id)
 
             if resp is False:
                 return False
@@ -636,19 +641,24 @@ class SolcastRooftopSite(SolcastAPI):
 
             fc = dict({"forecasts": forecastssorted})
 
+            wattsbefore = -1
+            lastforecast = None
             f = []
             for forecast in fc["forecasts"]:
-                # Convert period_end and period. All other fields should already be the correct type
-                if float(forecast["pv_estimate"]) > 0:
+                watts = round(float(forecast["pv_estimate"])*0.5,6)
+                if not (watts == 0 and wattsbefore == 0):
+                    if wattsbefore == 0:
+                        lastforecast["period_end"] = parse_datetime(lastforecast["period_end"]).astimezone()
+                        f.append(lastforecast)
+
                     forecast["period_end"] = parse_datetime(forecast["period_end"]).astimezone()
-                    #forecast["period"] = parse_duration(forecast["period"])
-                    #forecast["period_start"] = forecast["period_end"] - forecast["period"]
                     forecast["pv_estimate"] = round(float(forecast["pv_estimate"])*0.5,6)
                     f.append(forecast)
 
-            self._forecasts = f
+                wattsbefore = watts
+                lastforecast = forecast
 
-            
+            self._forecasts = f
 
             return True
         except Exception:
@@ -691,3 +701,4 @@ class SolcastRooftopSite(SolcastAPI):
                     return None
         except Exception:
             _LOGGER.error("get_energy_tab_data: %s", traceback.format_exc())
+

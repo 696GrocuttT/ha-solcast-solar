@@ -1,7 +1,12 @@
 ### Changes
 
+v2.1.5
+learnt some new ha api functions to make things nicer
+move the forecast graph over by 30min. looks better now
+some code clean up.. less messy
+
 v2.1.4
-moved the graph over by 30min.. lines up much nicer now.
+got removed.. buggy
 
 v2.1.3
 forecast values for today and remaining today where not correct after the first api fetch
