@@ -1,5 +1,8 @@
 ### Changes
 
+v2.1.7
+added changes needed for HA 2021.12
+
 v2.1.5
 learnt some new ha api functions to make things nicer
 move the forecast graph over by 30min. looks better now
