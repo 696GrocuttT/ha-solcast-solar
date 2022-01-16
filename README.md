@@ -24,6 +24,18 @@ recorder:
 
 ![integration](https://user-images.githubusercontent.com/1471841/149643099-ec209b50-daaf-4295-a918-d840da21edf9.png)
 
+If you have more than one Solcast rooftop site, repeat the above sets for each site
+(2 sites).. to edit them.. click the item to edit then the configure button will appear
+![img6](https://user-images.githubusercontent.com/1471841/149643389-dac7a6bd-71b3-4d57-9b84-262cd728285b.png)
+
+### HA Energy Tab
+Go to the HA>Configuration>Energy settings page
+Click the edit for the solar production item you have created. 
+![img4](https://user-images.githubusercontent.com/1471841/149643349-d776f1ad-530c-46aa-91dc-8b9e7c7f3123.png)
+
+Click the Forecast option button and select all the sites you have.. Click SAVE.. HA will do all the rest for you
+![img5](https://user-images.githubusercontent.com/1471841/149643348-cee444cf-d7ac-4304-ae72-d429eccc7b35.png)
+
 #### Getting a Solcast API Key:
 Sign up for an API key (https://solcast.com/)
 
