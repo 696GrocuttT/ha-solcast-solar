@@ -22,7 +22,7 @@ recorder:
       - sensor.solcast*
 ```
 
-![integration](https://user-images.githubusercontent.com/1471841/135556342-bd92b717-61ee-4dcd-95ed-2694714489bf.png)
+![integration](https://user-images.githubusercontent.com/1471841/149643099-ec209b50-daaf-4295-a918-d840da21edf9.png)
 
 #### Getting a Solcast API Key:
 Sign up for an API key (https://solcast.com/)
