@@ -32,3 +32,4 @@ Copy the id and api for this integration to work.
 
 ![img1](https://user-images.githubusercontent.com/1471841/135556872-ff5b51ac-699e-4ea5-869c-f9b0d0c5b815.png)
 ![img2](https://user-images.githubusercontent.com/1471841/135556549-1cdd1621-9351-43d2-85d1-cb335f0b77ba.png)
+![img3](https://user-images.githubusercontent.com/1471841/149643244-245c9a5a-cb0f-4de4-b641-631bcf7fe764.png)
