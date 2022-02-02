@@ -1,5 +1,8 @@
 ### Changes
 
+v2.1.8
+possible fix for github issue #25
+
 v2.1.7
 added changes needed for HA 2021.12
 
