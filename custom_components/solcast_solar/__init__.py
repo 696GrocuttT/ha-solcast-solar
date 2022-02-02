@@ -651,7 +651,7 @@ class SolcastRooftopSite(SolcastAPI):
                 watts = float(forecast["pv_estimate"])
                 if not (watts == 0 and wattsbefore == 0):
                     if wattsbefore == 0:
-                        lastforecast["period_end"] = parse_datetime(lastforecast["period_end"]).astimezone()
+                        #lastforecast["period_end"] = parse_datetime(lastforecast["period_end"]).astimezone()
                         f.append(lastforecast)
 
                     forecast["period_end"] = parse_datetime(forecast["period_end"]).astimezone()
