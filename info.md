@@ -1,5 +1,10 @@
 ### Changes
 
+V2.2.0
+github issue #25 should be fixed now
+added new config offset for TZ for those that are having the odd graph drawing problem
+If you already have this integration installed edit each rooftop and enter "0" for the offset value to remove any config errors
+
 v2.1.8
 possible fix for github issue #25
 
