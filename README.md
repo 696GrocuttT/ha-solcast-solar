@@ -22,7 +22,11 @@ recorder:
       - sensor.solcast*
 ```
 
-![integration](https://user-images.githubusercontent.com/1471841/149643099-ec209b50-daaf-4295-a918-d840da21edf9.png)
+<img width="301" alt="Screen Shot 2022-02-03 at 12 46 02 pm" src="https://user-images.githubusercontent.com/1471841/152277906-b01cf56d-36e6-4176-849b-388125edb7b2.png">
+
+ONLY SET THE OFFSET to anything other than zero ONLY if your energy graph does not display properly.
+Leave it as zero for default and then only if there is a problem change it. [see issue 21](https://github.com/oziee/ha-solcast-solar/issues/21)
+
 
 If you have more than one Solcast rooftop site, repeat the above sets for each site
 (2 sites).. to edit them.. click the item to edit then the configure button will appear
