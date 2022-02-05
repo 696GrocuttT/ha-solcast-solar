@@ -1,5 +1,8 @@
 ### Changes
 
+v2.2.1
+added HA configurate migration
+
 V2.2.0
 github issue #25 should be fixed now
 added new config offset for TZ for those that are having the odd graph drawing problem
