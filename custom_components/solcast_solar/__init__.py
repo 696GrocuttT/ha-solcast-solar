@@ -306,6 +306,10 @@ class SolcastRooftopSite(SolcastAPI):
                         forecast = json.loads(forecast)
                         forecast["period_end"] = parse_datetime(forecast["period_end"])
                         forecast["pv_estimate"] = float(forecast["pv_estimate"])
+                        if "pv_estimate10" in forecast:
+                            forecast["pv_estimate10"] = float(forecast["pv_estimate10"])
+                        if "pv_estimate90" in forecast:
+                            forecast["pv_estimate90"] = float(forecast["pv_estimate90"])
 
                         f.append(forecast)
 
@@ -531,8 +535,16 @@ class SolcastRooftopSite(SolcastAPI):
 
                             # Process forecast data
                             for forecasts in self._forecasts:
-                                d = {"period_end": forecasts["period_end"].isoformat(),
-                                        "pv_estimate": forecasts["pv_estimate"]}
+                                if "pv_estimate10" in forecasts:
+                                    d = {"period_end": forecasts["period_end"].isoformat(),
+                                        "pv_estimate": forecasts["pv_estimate"],
+                                        "pv_estimate10": forecasts.get("pv_estimate10"),
+                                        "pv_estimate90": forecasts.get("pv_estimate90")}
+                                else:
+                                    d = {"period_end": forecasts["period_end"].isoformat(),
+                                        "pv_estimate": forecasts["pv_estimate"],
+                                        "pv_estimate10": 0.0,
+                                        "pv_estimate90": 0.0}
                                 
                                 found = eventdata.filter(Events.time_fired == forecasts["period_end"])
                                 foundcount = len(found.all())
@@ -685,6 +697,10 @@ class SolcastRooftopSite(SolcastAPI):
 
                     forecast["period_end"] = parse_datetime(forecast["period_end"]).astimezone()
                     forecast["pv_estimate"] = round(float(forecast["pv_estimate"])*0.5,6)
+                    if "pv_estimate10" in forecast:
+                        forecast["pv_estimate10"] = round(float(forecast["pv_estimate10"])*0.5,6)
+                    if "pv_estimate90" in forecast:
+                        forecast["pv_estimate90"] = round(float(forecast["pv_estimate90"])*0.5,6)
                     f.append(forecast)
 
                 wattsbefore = watts

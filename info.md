@@ -1,5 +1,8 @@
 ### Changes
 
+v2.2.2
+added solcast data for pv_estimate10 and pv_estimate90 to the DB for those that want to use it
+
 v2.2.1
 added HA configurate migration
 
