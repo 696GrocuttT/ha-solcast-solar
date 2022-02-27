@@ -268,6 +268,9 @@ class SolcastRooftopSite(SolcastAPI):
         try:
             if sensor_type == SensorType.forecast_today or sensor_type == SensorType.forecast_tomorrow:
                 fromDatetime = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+                if sensor_type == SensorType.forecast_tomorrow:
+                    fromDatetime = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) + timedelta(days=1)
+
                 thislist = []
 
                 for x in range(24):
