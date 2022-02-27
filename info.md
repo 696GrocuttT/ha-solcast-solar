@@ -1,5 +1,8 @@
 ### Changes
 
+v2.2.3
+Sensor Forecast_Today and Forecast_Tomorrow now includes in the attributes 'hourly' values in watts for the whole 24hr period
+
 v2.2.2
 added solcast data for pv_estimate10 and pv_estimate90 to the DB for those that want to use it
 

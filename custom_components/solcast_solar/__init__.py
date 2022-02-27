@@ -5,6 +5,7 @@ import traceback
 from datetime import datetime, timedelta
 from enum import Enum
 from operator import itemgetter
+from xml.etree.ElementTree import fromstring
 
 import aiohttp
 import homeassistant.util.dt as dt_util
@@ -265,7 +266,34 @@ class SolcastRooftopSite(SolcastAPI):
     def get_extra_state_attributes(self, sensor_type):
         """Return the attributes."""
         try:
-            return {"resource_id": self._resource_id}
+            if sensor_type == SensorType.forecast_today or sensor_type == SensorType.forecast_tomorrow:
+                fromDatetime = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+                thislist = []
+
+                for x in range(24):
+                    toDatetime = fromDatetime + timedelta(hours=1)
+                    a = self.get_stored_forecast_data(fromDatetime,toDatetime)
+                    l = 0.0
+                    m = 0.0
+                    n = 0.0
+                    if a:
+                        for item in a:
+                            if "pv_estimate" in item:
+                                l = l + float(item["pv_estimate"]) * 1000
+                            if "pv_estimate10" in item:
+                                m = m + float(item["pv_estimate10"]) * 1000
+                            if "pv_estimate90" in item:
+                                n = n +  float(item["pv_estimate90"]) * 1000
+
+                    b = {}
+                    b[fromDatetime.strftime("%H:%M")] = {"pv_estimate":round(l, 1), "pv_estimate10":round(m, 1), "pv_estimate90":round(n, 1)}
+                    thislist.append(b)
+                    fromDatetime = toDatetime
+
+
+                return {"resource_id": self._resource_id, "hourly": thislist}
+            else:
+                return {"resource_id": self._resource_id}
         except Exception:
             _LOGGER.error("get_extra_state_attributes: %s", traceback.format_exc())
 
@@ -681,6 +709,7 @@ class SolcastRooftopSite(SolcastAPI):
                     del forecastssorted[-1]
 
             fc = dict({"forecasts": forecastssorted})
+           
 
             wattsbefore = -1
             lastforecast = None
