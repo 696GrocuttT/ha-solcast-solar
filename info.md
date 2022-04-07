@@ -1,5 +1,8 @@
 ### Changes
 
+v2.2.4
+HA 2022.4 fix for event log 'Detected integration that accesses the database without the database executor; Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() for faster database operations. Please report issue to the custom component author for solcast_solar using this method at custom_components/solcast_solar/__init__.py, line 332: event_s: list[int] = [event.event_data for event in events]'
+
 v2.2.3
 Sensor Forecast_Today and Forecast_Tomorrow now includes in the attributes 'hourly' values in watts for the whole 24hr period
 

@@ -14,4 +14,4 @@ async def async_get_solar_forecast(hass: HomeAssistant, config_entry_id: str):
     if coordinator is None:
         return None
 
-    return coordinator.get_energy_tab_data()
+    return await coordinator.get_energy_tab_data()

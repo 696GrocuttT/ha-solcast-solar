@@ -9,6 +9,7 @@ from xml.etree.ElementTree import fromstring
 
 import aiohttp
 import homeassistant.util.dt as dt_util
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import Events
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.config_entries import ConfigEntry
@@ -263,7 +264,7 @@ class SolcastRooftopSite(SolcastAPI):
         """Get Solcast rooftopsite attributes."""
         return self._attributes[sensor_type]
 
-    def get_extra_state_attributes(self, sensor_type):
+    async def get_extra_state_attributes(self, sensor_type):
         """Return the attributes."""
         try:
             if sensor_type == SensorType.forecast_today or sensor_type == SensorType.forecast_tomorrow:
@@ -275,7 +276,7 @@ class SolcastRooftopSite(SolcastAPI):
 
                 for x in range(24):
                     toDatetime = fromDatetime + timedelta(hours=1)
-                    a = self.get_stored_forecast_data(fromDatetime,toDatetime)
+                    a = await get_instance(self._hass).async_add_executor_job(self.get_stored_forecast_data(fromDatetime,toDatetime))
                     l = 0.0
                     m = 0.0
                     n = 0.0
@@ -310,7 +311,7 @@ class SolcastRooftopSite(SolcastAPI):
     #    _LOGGER.error("no last update date value in state")
     #    return dt_util.now() - timedelta(hours=1)
 
-    def get_stored_forecast_data(self, fromDatetime:datetime = None, toDatetime:datetime = None):
+    async def get_stored_forecast_data(self, fromDatetime:datetime = None, toDatetime:datetime = None):
         try:
             if fromDatetime is None:
                 fromDatetime = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=1)
@@ -320,7 +321,7 @@ class SolcastRooftopSite(SolcastAPI):
             toDatetime = toDatetime.astimezone().strftime("%Y-%m-%d %H:%M")
 
             with session_scope(hass=self._hass) as session:
-                events: list[Events] = (
+                event_s = (
 
                     session.query(Events.event_data).filter( 
                         Events.event_type == self._entry_id, 
@@ -329,11 +330,10 @@ class SolcastRooftopSite(SolcastAPI):
                     )
                 )
 
-                event_s: list[int] = [event.event_data for event in events]
-
                 if event_s:
                     f = []
                     for forecast in event_s:
+                        forecast=dict(forecast)['event_data']
                         forecast = json.loads(forecast)
                         forecast["period_end"] = parse_datetime(forecast["period_end"])
                         forecast["pv_estimate"] = float(forecast["pv_estimate"])
@@ -408,7 +408,7 @@ class SolcastRooftopSite(SolcastAPI):
         except Exception:
             _LOGGER.error("start_periodic_update: %s", traceback.format_exc())
 
-    def get_forecast_sensor_state(self, sensor_type:SensorType = None):
+    async def get_forecast_sensor_state(self, sensor_type:SensorType = None):
         """ update ha values to display"""
         try:
             #use a session to get the data from the database
@@ -422,17 +422,16 @@ class SolcastRooftopSite(SolcastAPI):
                     startdate = startdate.strftime("%Y-%m-%d %H:%M")
                     enddate = enddate.strftime("%Y-%m-%d %H:%M")
 
-                    events: list[Events] = (
+                    event_s = (
                             session.query(Events.event_data)
                                 .filter(Events.event_type == self._entry_id,
                                         Events.time_fired > startdate,
                                         Events.time_fired < enddate)
                                 )
 
-                    event_s: list[int] = [event.event_data for event in events]
-                    
                     if event_s:
                         for item in event_s:
+                            item=dict(item)['event_data']
                             item = json.loads(item)
                             e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
                     #self._states[SensorType.forecast_today] = round(e_total, 3)
@@ -447,17 +446,16 @@ class SolcastRooftopSite(SolcastAPI):
                     startdate = startdate.strftime("%Y-%m-%d %H:%M")
                     enddate = enddate.strftime("%Y-%m-%d %H:%M")
 
-                    events: list[Events] = (
+                    event_s = (
                             session.query(Events.event_data)
                                 .filter(Events.event_type == self._entry_id,
                                         Events.time_fired > startdate,
                                         Events.time_fired < enddate)
                                 )
 
-                    event_s: list[int] = [event.event_data for event in events]
-                    
                     if event_s:
                         for item in event_s:
+                            item=dict(item)['event_data']
                             item = json.loads(item)
                             e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
                     #self._states[SensorType.forecast_tomorrow] = round(e_total, 3)
@@ -472,17 +470,16 @@ class SolcastRooftopSite(SolcastAPI):
                     startdate = startdate.strftime("%Y-%m-%d %H:%M")
                     enddate = enddate.strftime("%Y-%m-%d %H:%M")
 
-                    events: list[Events] = (
+                    event_s = (
                             session.query(Events.event_data)
                                 .filter(Events.event_type == self._entry_id,
                                         Events.time_fired > startdate,
                                         Events.time_fired < enddate)
                                 )
 
-                    event_s: list[int] = [event.event_data for event in events]
-                    
                     if event_s:
                         for item in event_s:
+                            item=dict(item)['event_data']
                             item = json.loads(item)
                             e_total = e_total + float(item["pv_estimate"]) #*1000) #* 0.5
                     #self._states[SensorType.forecast_today_remaining] = round(e_total, 3)
@@ -712,7 +709,6 @@ class SolcastRooftopSite(SolcastAPI):
                     del forecastssorted[-1]
 
             fc = dict({"forecasts": forecastssorted})
-           
 
             wattsbefore = -1
             lastforecast = None
@@ -744,17 +740,18 @@ class SolcastRooftopSite(SolcastAPI):
         except Exception:
             _LOGGER.error("_fetch_forecasts: %s", traceback.format_exc())
 
-    def get_energy_tab_data(self):
+    async def get_energy_tab_data(self):
+        return await get_instance(self._hass).async_add_executor_job(self.energy_tab_data)
+
+    def energy_tab_data(self):
         """Get solar forecast for a config entry ID."""
         try:
             with session_scope(hass=self._hass) as session:
-                events: list[Events] = (
+                event_s = (
                         session.query(Events.event_data)
                         .filter(Events.event_type == self._entry_id)
                         .order_by(Events.time_fired.asc())
                 )
-
-                event_s: list[int] = [event.event_data for event in events]
 
                 tzoffset = 0
                 try:
@@ -772,6 +769,7 @@ class SolcastRooftopSite(SolcastAPI):
                     beforewatts = 0
                     wh_hours = {}
                     for item in event_s:
+                        item=dict(item)['event_data']
                         item = json.loads(item)
                         energy = float(item["pv_estimate"]*1000) #* 0.5
                         if energy > 0 or beforewatts > 0:
@@ -797,4 +795,3 @@ class SolcastRooftopSite(SolcastAPI):
                     return None
         except Exception:
             _LOGGER.error("get_energy_tab_data: %s", traceback.format_exc())
-
