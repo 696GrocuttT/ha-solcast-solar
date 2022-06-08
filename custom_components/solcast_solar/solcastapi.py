@@ -154,10 +154,18 @@ class SolcastApi:
 
         return d
 
-    # def set_rooftop_site_total_today(self, rooftopid = "", total = 0.0):
-    #     """Set a rooftop sites total kw for today"""
-    #     g = [d for d in self._sites if d['resource_id'] == rooftopid]   
-    #     g[0]["kw_total_today"] = total
+    def get_remaining_today(self):
+        """Return Remaining Forecasts data for today"""
+        da = dt.now().replace(minute=0, second=0, microsecond=0)
+        h = da.hour
+        da = da.date()
+        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+        tot = 0
+        for p in g:
+            if p["period_end"].hour >= h:
+                tot += p["pv_estimate"]
+        
+        return round(tot,2)
     
     def get_forecast_today(self) -> dict[str, Any]:
         """Return Solcast Forecasts data for today"""
@@ -185,7 +193,7 @@ class SolcastApi:
         """Return total kwh total for rooftop site today"""
         da = dt.now().replace(minute=0, second=0, microsecond=0).date()
         g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        return round(sum(z['pv_estimate'] for z in g if z),3)
+        return round(sum(z['pv_estimate'] for z in g if z),2)
 
     def get_peak_w_today(self) -> int:
         """Return hour of max kw for rooftop site today"""
@@ -210,7 +218,7 @@ class SolcastApi:
         """Return total kwh total for rooftop site tomorrow"""
         da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
         g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        return round(sum(z['pv_estimate'] for z in g if z),3)
+        return round(sum(z['pv_estimate'] for z in g if z),2)
 
     def get_peak_w_tomorrow(self) -> int:
         """Return hour of max kw for rooftop site tomorrow"""
@@ -293,7 +301,7 @@ class SolcastApi:
                         p = self._data[number]
                         p["pv_estimate"] = float(p["pv_estimate"]) + float(_d[number]["pv_estimate"])
 
-                _s[site['resource_id']] = round(tally_today,3)
+                _s[site['resource_id']] = round(tally_today,2)
                 
             
 
@@ -387,68 +395,3 @@ class SolcastApi:
                 lastv = v['pv_estimate']
 
         return wh_hours
-
-    # async def format_json_data(self, data=None):
-    #     try:
-    #         fc = data.get("forecasts")
-
-    #         forecastssorted = sorted(fc, key=itemgetter("period_end"))
-
-    #         # if len(forecastssorted) > 2:
-    #         #     pd = parse_datetime(forecastssorted[0]["period_end"])
-    #         #     if pd.minute == 30:
-    #         #         del forecastssorted[0]
-
-
-    #         fc = dict({"forecasts": forecastssorted})
-
-    #         today = dt.now().date()
-    #         tomorrow = dt.now().date() + timedelta(days=1)
-
-    #         g = dict({"today":{}, "tomorrow":{}})
-            
-
-    #         for forecast in fc["forecasts"]:                
-    #             d = parse_datetime(forecast["period_end"]).astimezone() #- timedelta(minutes=60)
-
-    #             if d.date() == today or d.date() == tomorrow: #just incase we get too many items in 48 that goes over 3 days
-    #                 time = d.strftime('%H')
-    #                 watts = round(float(forecast["pv_estimate"])*0.5, 3) #because its in 30min values so convvert to watt hours
-    #                 watts10 = round(float(forecast["pv_estimate10"])*0.5, 3)
-    #                 watts90 = round(float(forecast["pv_estimate90"])*0.5, 3)
-
-    #                 if d.date() == today:
-    #                     key = "today"
-    #                 elif d.date() == tomorrow:
-    #                     key = "tomorrow"
-
-    #                 if time in g[key]:
-    #                     g[key][time]["pv_estimate"] = float(g[key][time]["pv_estimate"]) + watts
-    #                     g[key][time]["pv_estimate10"] = float(g[key][time]["pv_estimate10"]) + watts10
-    #                     g[key][time]["pv_estimate90"] = float(g[key][time]["pv_estimate90"]) + watts90
-    #                 else:
-    #                     g[key][time] = {"pv_estimate":watts, "pv_estimate10":watts10, "pv_estimate90":watts90}
-
-    #         for k,v in g['today'].items():
-    #             self._data['today'][k] = v
-
-    #         for k,v in g['tomorrow'].items():
-    #             self._data['tomorrow'][k] = v
-
-
-    #         today = dt.now()
-    #         tomorrow = dt.now() + timedelta(days=1)
-
-    #         whd1 = self.makeenergydict("today",today)
-    #         whd2 = self.makeenergydict("tomorrow",tomorrow)
-
-    #         self._data["energy"] = {"wh_hours": whd1 | whd2}
-
-    #         self._data["last_updated"] = dt.now(timezone.utc).isoformat()
-    #         self._data['api_used'] = self._api_used
-
-    #         with open(self._filename, 'w') as f:
-    #             json.dump(self._data, f, ensure_ascii=False)
-
-    #     except Exception as e:
-    #         _LOGGER.error("Solcastapi format_json_data error: %s", traceback.format_exc())

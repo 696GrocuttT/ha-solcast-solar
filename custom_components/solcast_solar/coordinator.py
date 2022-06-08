@@ -99,7 +99,7 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
                     if _hournow == 0 or (_hournow > self._starthour and _hournow < self._finishhour):
                         await self.solcast.force_api_poll()
             else:
-                _LOGGER.warn("Solcast - API poll called, but did not happen as the last update is less than an hour old")
+                _LOGGER.debug("Solcast - API poll called, but did not happen as the last update is less than an hour old")
             
             #self.async_set_updated_data(True)
             for update_callback in self._listeners:
@@ -134,6 +134,8 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
             return self.solcast.get_peak_w_tomorrow()
         elif key == "peak_w_time_tomorrow":
             return self.solcast.get_peak_w_time_tomorrow()
+        elif key == "get_remaining_today":
+            return self.solcast.get_remaining_today()
         elif key == "api_counter":
             return self.solcast.get_api_used_count()
         elif key == "lastupdated":

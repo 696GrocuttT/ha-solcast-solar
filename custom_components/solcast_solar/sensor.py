@@ -59,6 +59,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="Forecast This Hour",
         icon="mdi:solar-power",
     ),
+    "forecast_remaining_today": SensorEntityDescription(
+        key="get_remaining_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        name="Forecast Remaining Today",
+        icon="mdi:solar-power",
+    ),
     "forecast_next_hour": SensorEntityDescription(
         key="forecast_next_hour",
         device_class=SensorDeviceClass.ENERGY,
