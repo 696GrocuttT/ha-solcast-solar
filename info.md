@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.4 beta
+bug fixes
+
 Complete re write. v3.0 now 
 **Do not update this if you like the way the older version worked**
 *There are many changes to this integration*

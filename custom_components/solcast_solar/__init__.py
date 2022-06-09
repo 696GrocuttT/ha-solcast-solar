@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
 
         options = ConnectionOptions(
-            #entry.options[CONF_RESOURCE_ID],
             entry.options[CONF_API_KEY],
             SOLCAST_URL
         )

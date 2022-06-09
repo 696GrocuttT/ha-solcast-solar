@@ -45,7 +45,6 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
 
 
     async def _async_update_data(self):
-        _LOGGER.debug("_async_update_data called")
         """Update data via library."""
         async with async_timeout.timeout(30):
             try:
@@ -74,7 +73,6 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
             
             self._finishhour= next_setting.astimezone().hour # already one hour ahead
             
-
             self._auto_fetch_tracker = async_track_utc_time_change(self._hass, self.update_forecast, minute=0, second=0, local=True)
 
             _LOGGER.debug("Solcast - API will only connect between the hours %s and %s and at midnight",self._starthour,self._finishhour)

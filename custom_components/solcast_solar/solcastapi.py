@@ -59,7 +59,6 @@ class SolcastApi:
         self.aiohttp_session = aiohttp_session
         self.options = options
         self._sites = []
-        #self.sites_data()
         self._data = dict({'forecasts':[], 'energy': {}, 'api_used':0, 'last_updated': dt.now(timezone.utc).replace(year=2000,month=1,day=1).isoformat()})
         self._api_used = 0
         self._filename = f'solcast.json'
@@ -93,7 +92,6 @@ class SolcastApi:
         except Exception as e:
             _LOGGER.error("Solcast http_data error: %s", traceback.format_exc())
 
-    
     async def load_saved_data(self):
 
         if len(self._sites) > 0:
@@ -111,11 +109,17 @@ class SolcastApi:
 
     def get_api_used_count(self) -> int:
         """Return API polling count for this UTC 24hr period"""
-        return self._api_used
+        try:
+            return self._api_used
+        except Exception:
+            return -1
 
     def get_last_updated_datetime(self) -> dt:
         """Return date time with the data was last updated"""
-        return  dt.fromisoformat(self._data["last_updated"])
+        try:
+            return dt.fromisoformat(self._data["last_updated"])
+        except Exception:
+            return dt.now(timezone.utc).replace(year=2000,month=1,day=1).isoformat()
 
     async def reset_api_counter(self):
         self._api_used = 0
@@ -123,121 +127,160 @@ class SolcastApi:
     def get_rooftop_site_total_today(self, rooftopid = "") -> float:
         """Return a rooftop sites total kw for today"""
         #g = [d for d in self._sites if d['resource_id'] == rooftopid]   
-        return self._data["siteinfo"][rooftopid]
+        try:
+            return self._data["siteinfo"][rooftopid]
+        except Exception:
+            return 0
 
     def get_rooftop_site_extra_data(self, rooftopid = "") -> float:
         """Return a rooftop sites total kw for today"""
-        g = [d for d in self._sites if d['resource_id'] == rooftopid]   
-        site = g[0]
-        d = {}
+        try:
+            g = [d for d in self._sites if d['resource_id'] == rooftopid]   
+            site = g[0]
+            d = {}
 
-        if "name" in site:
-            d["name"] = site["name"]
-        if "resource_id" in site:
-            d["resource_id"] = site["resource_id"]
-        if "capacity" in site:
-            d["capacity"] = site["capacity"]
-        if "capacity_dc" in site:
-            d["capacity_dc"] = site["capacity_dc"]
-        if "longitude" in site:
-            d["longitude"] = site["longitude"]
-        if "latitude" in site:
-            d["latitude"] = site["latitude"]
-        if "azimuth" in site:
-            d["azimuth"] = site["azimuth"]
-        if "tilt" in site:
-            d["tilt"] = site["tilt"]
-        if "install_date" in site:
-            d["install_date"] = site["install_date"]
-        if "loss_factor" in site:
-            d["loss_factor"] = site["loss_factor"]
+            if "name" in site:
+                d["name"] = site["name"]
+            if "resource_id" in site:
+                d["resource_id"] = site["resource_id"]
+            if "capacity" in site:
+                d["capacity"] = site["capacity"]
+            if "capacity_dc" in site:
+                d["capacity_dc"] = site["capacity_dc"]
+            if "longitude" in site:
+                d["longitude"] = site["longitude"]
+            if "latitude" in site:
+                d["latitude"] = site["latitude"]
+            if "azimuth" in site:
+                d["azimuth"] = site["azimuth"]
+            if "tilt" in site:
+                d["tilt"] = site["tilt"]
+            if "install_date" in site:
+                d["install_date"] = site["install_date"]
+            if "loss_factor" in site:
+                d["loss_factor"] = site["loss_factor"]
 
-        return d
+            return d
+        except Exception:
+            return {}
 
     def get_remaining_today(self):
         """Return Remaining Forecasts data for today"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0)
-        h = da.hour
-        da = da.date()
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        tot = 0
-        for p in g:
-            if p["period_end"].hour >= h:
-                tot += p["pv_estimate"]
-        
-        return round(tot,2)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0)
+            h = da.hour
+            da = da.date()
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            tot = 0
+            for p in g:
+                if p["period_end"].hour >= h:
+                    tot += p["pv_estimate"]
+            
+            return round(tot,2)
+        except Exception:
+            return 0
     
     def get_forecast_today(self) -> dict[str, Any]:
         """Return Solcast Forecasts data for today"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date()
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        return {"forecast": g}
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date()
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            return {"forecast": g}
+        except Exception:
+            return {}
 
     def get_forecast_tomorrow(self) -> dict[str, Any]:
         """Return Solcast Forecasts data for tomorrow"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        return {"forecast": g}
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            return {"forecast": g}
+        except Exception:
+            return {}
 
     def get_forecast_this_hour(self) -> int:
-        da = dt.now().replace(minute=0, second=0, microsecond=0).astimezone()
-        g = [d for d in self._data["forecasts"] if d['period_end'] == da]   
-        return round(g[0]['pv_estimate'] * 1000,0)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).astimezone()
+            g = [d for d in self._data["forecasts"] if d['period_end'] == da]   
+            return int(g[0]['pv_estimate'] * 1000)
+        except Exception:
+            return 0
 
     def get_forecast_next_hour(self) -> int:
-        da = dt.now().replace(minute=0, second=0, microsecond=0).astimezone() + timedelta(hours=1)
-        g = [d for d in self._data["forecasts"] if d['period_end'] == da]   
-        return round(g[0]['pv_estimate'] * 1000,0)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).astimezone() + timedelta(hours=1)
+            g = [d for d in self._data["forecasts"] if d['period_end'] == da]   
+            return int(g[0]['pv_estimate'] * 1000)
+        except Exception:
+            return 0
 
     def get_total_kwh_forecast_today(self) -> float:
         """Return total kwh total for rooftop site today"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date()
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        return round(sum(z['pv_estimate'] for z in g if z),2)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date()
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            return round(sum(z['pv_estimate'] for z in g if z),2)
+        except Exception:
+            return 0
 
     def get_peak_w_today(self) -> int:
         """Return hour of max kw for rooftop site today"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date()
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        m = max(z['pv_estimate'] for z in g if z) 
-        return int(m * 1000)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date()
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            m = max(z['pv_estimate'] for z in g if z) 
+            return int(m * 1000)
+        except Exception:
+            return 0
 
     def get_peak_w_time_today(self) -> dt:
         """Return hour of max kw for rooftop site today"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date()
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        m = max(z['pv_estimate'] for z in g if z) 
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date()
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            m = max(z['pv_estimate'] for z in g if z) 
 
-        for v in g:
-            if v['pv_estimate'] == m:
-                return v['period_end']
-                #return p.isoformat()
-        return None
+            for v in g:
+                if v['pv_estimate'] == m:
+                    return v['period_end']
+                    #return p.isoformat()
+            return None
+        except Exception:
+            return None
 
     def get_total_kwh_forecast_tomorrow(self) -> float:
         """Return total kwh total for rooftop site tomorrow"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        return round(sum(z['pv_estimate'] for z in g if z),2)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            return round(sum(z['pv_estimate'] for z in g if z),2)
+        except Exception:
+            return 0
 
     def get_peak_w_tomorrow(self) -> int:
         """Return hour of max kw for rooftop site tomorrow"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        m = max(z['pv_estimate'] for z in g if z) 
-        return int(m * 1000)
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            m = max(z['pv_estimate'] for z in g if z) 
+            return int(m * 1000)
+        except Exception:
+            return 0
 
     def get_peak_w_time_tomorrow(self) -> dt:
         """Return hour of max kw for rooftop site tomorrow"""
-        da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
-        g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
-        m = max(z['pv_estimate'] for z in g if z) 
+        try:
+            da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
+            g = [d for d in self._data["forecasts"] if d['period_end'].date() == da]
+            m = max(z['pv_estimate'] for z in g if z) 
 
-        for v in g:
-            if v['pv_estimate'] == m:
-                return v['period_end']
-                #  return p.isoformat() ??
-        return None
+            for v in g:
+                if v['pv_estimate'] == m:
+                    return v['period_end']
+                    #  return p.isoformat() ??
+            return None
+        except Exception:
+            return None
     
     def get_energy_data(self) -> dict[str, Any]:
         try:
@@ -253,6 +296,8 @@ class SolcastApi:
             
             today = dt.now().date()
 
+            _olddata = self._data
+
             self._data = []
 
             _s = {}
@@ -261,12 +306,20 @@ class SolcastApi:
                 _data = []
                 
                 ae = await self.fetch_data("estimated_actuals", 28, site['resource_id'])
+                if not type(ae) is dict:
+                    self._data = _olddata
+                    return
+
                 for x in ae['estimated_actuals']:
                     z = parse_datetime(x['period_end']).astimezone() + timedelta(minutes=-30)
                     if z.date() == today:
                         _data.append({"period_end": z,"pv_estimate": x["pv_estimate"]*0.5})
 
                 af = await self.fetch_data("forecasts", 168, site['resource_id'])
+                if not type(af) is dict:
+                    self._data = _olddata
+                    return
+
                 for x in af['forecasts']:
                     z = parse_datetime(x['period_end']).astimezone() + timedelta(minutes=-30)
                     _data.append({"period_end": z,"pv_estimate": x["pv_estimate"]*0.5})
