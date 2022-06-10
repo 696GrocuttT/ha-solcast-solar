@@ -1,5 +1,11 @@
 ### Changes
 
+v3.0.5 beta
+fixed 'this hour' amd 'next hour' sensor values
+slow down the api polling if more than 1 rooftop to poll
+fix first hour graph plot data
+possibly RC1?? will see
+
 v3.0.4 beta
 bug fixes
 
