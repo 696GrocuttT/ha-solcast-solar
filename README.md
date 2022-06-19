@@ -39,7 +39,6 @@ Click the Forecast option button and select the Solcast Solar option.. Click SAV
 ### HA Energy Tab
 ![img1](https://user-images.githubusercontent.com/1471841/135556872-ff5b51ac-699e-4ea5-869c-f9b0d0c5b815.png)
 ![img2](https://user-images.githubusercontent.com/1471841/135556549-1cdd1621-9351-43d2-85d1-cb335f0b77ba.png)
-![img3](https://user-images.githubusercontent.com/1471841/149643244-245c9a5a-cb0f-4de4-b641-631bcf7fe764.png)
 
 ### HA Solcast Integration Sensors
 ![img31](https://user-images.githubusercontent.com/1471841/174471633-4aa0bb1d-009e-4d33-9c41-f0b6489cb995.png)
