@@ -2,8 +2,8 @@
 
 v3.0.7
 - **users upgrading from v3.0.5 or lover, need to delete the 'solcast.json' file in the HA>config directory to stop any errors**
--renamed sensors with the prefix "solcast_" to help naming sensors easier
-** you will get double ups of the sensors in the integration because of the naming change. these will show greyed out in the list or with the values like unknown or unavailable etc.. just delete these old sensors one by one from the integration **
+- renamed sensors with the prefix "solcast_" to help naming sensors easier
+- ** you will get double ups of the sensors in the integration because of the naming change. these will show greyed out in the list or with the values like unknown or unavailable etc.. just delete these old sensors one by one from the integration **
 
 v3.0.6
 - **users upgrading from v3.0.x need to delete the 'solcast.json' file in the HA>config directory**
