@@ -1,13 +1,21 @@
 ### Changes
 
+v3.0.6
+- fixed lots of little bugs and problems.
+- added ability to add multiple solcast accounts. Just comma seperate the api_keys in the integration config.
+- remained API Counter to API Left. shows how many is remaining rather than used count.
+- 'actual forecast' data is now only called once, the last api call at sunset. OR during integration install first run.
+- forecast data is still called every hour between sunrise and sunset and once at midnight every day.
+*Just delete the old API Counter sensor as its not used now*
+
 v3.0.5 beta
-fixed 'this hour' amd 'next hour' sensor values
-slow down the api polling if more than 1 rooftop to poll
-fix first hour graph plot data
-possibly RC1?? will see
+- fixed 'this hour' amd 'next hour' sensor values.
+- slow down the api polling if more than 1 rooftop to poll.
+- fix first hour graph plot data.
+- possibly RC1?? will see.
 
 v3.0.4 beta
-bug fixes
+- bug fixes.
 
 Complete re write. v3.0 now 
 **Do not update this if you like the way the older version worked**
