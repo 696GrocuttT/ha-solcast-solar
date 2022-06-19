@@ -142,7 +142,7 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        self._id = entity_description.key
+        self._id = f"solcast_{entity_description.key}"
 
         ATTRIBUTION: Final = "Data provided by Solcast Solar"
         _attr_attribution = ATTRIBUTION
@@ -211,7 +211,7 @@ class RooftopSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        self._id = entity_description.key
+        self._id = f"solcast_{entity_description.key}"
 
         ATTRIBUTION: Final = "Data provided by Solcast Solar"
         _attr_attribution = ATTRIBUTION
