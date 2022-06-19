@@ -173,7 +173,7 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return self._unique_id
+        return f"solcast_{self._unique_id}"
 
     @property
     def extra_state_attributes(self):
@@ -242,7 +242,7 @@ class RooftopSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return self._unique_id
+        return f"solcast_{self._unique_id}"
 
     @property
     def extra_state_attributes(self):
