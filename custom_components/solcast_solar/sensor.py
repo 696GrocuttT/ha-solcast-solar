@@ -168,7 +168,7 @@ class SolcastSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f" {self.entity_description.name}"
+        return f"Solcast {self.entity_description.name}"
 
     @property
     def unique_id(self):
@@ -237,7 +237,7 @@ class RooftopSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f" {self.entity_description.name}"
+        return f"Solcast {self.entity_description.name}"
 
     @property
     def unique_id(self):
