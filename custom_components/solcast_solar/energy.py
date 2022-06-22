@@ -1,5 +1,6 @@
 """Energy platform."""
 from __future__ import annotations
+from collections import OrderedDict
 
 from homeassistant.core import HomeAssistant
 
@@ -23,8 +24,11 @@ async def async_get_solar_forecast(hass: HomeAssistant, config_entry_id: str):
     
     try:
         e = coordinator._previousenergy
-        d['wh_hours'].update(e)
+        e.update(d['wh_hours'])
+        e = OrderedDict(sorted(e.items()))
+        d = {"wh_hours": e}
+        #d['wh_hours'].update(e)
     except Exception as e:
         _LOGGER.warn(e)
-    
+        
     return d 
