@@ -185,6 +185,8 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
                 dt_util.as_utc(start_date),
                 end_time=dt_util.as_utc(end_date),
                 entity_id=lower_entity_id,
+                no_attributes=True,
+                descending=True,
             )
 
             d={}
