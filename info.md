@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.12
+- graphed data for week/month/year was not ordered so the graph was messy
+
 v3.0.11
 - added timeout for solcast api server connections
 - added previous 7 day graph data to the energy dashboard (only works if you are recording data)
