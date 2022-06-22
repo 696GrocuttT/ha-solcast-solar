@@ -1,5 +1,9 @@
 ### Changes
 
+v3.0.11
+- added timeout for solcast api server connections
+- added previous 7 day graph data to the energy dashboard (only works if you are recording data)
+
 v3.0.9
 - **users upgrading from v3.0.5 or lover, need to delete the 'solcast.json' file in the HA>config directory to stop any errors**
 - renamed sensors with the prefix "solcast_" to help naming sensors easier
