@@ -1,6 +1,9 @@
 ### Changes
 
 v3.0.12
+- past graphed data did not reset at midnight local time
+
+v3.0.12
 - graphed data for week/month/year was not ordered so the graph was messy
 
 v3.0.11
