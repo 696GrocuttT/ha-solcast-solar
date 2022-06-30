@@ -1,7 +1,8 @@
 ### Changes
 
-v3.0.12
+v3.0.13
 - past graphed data did not reset at midnight local time
+- missing asyncio import
 
 v3.0.12
 - graphed data for week/month/year was not ordered so the graph was messy
