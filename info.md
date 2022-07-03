@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.14
+- fixes HA 2022.7.0b2 errors (seems to :) )
+
 v3.0.13
 - past graphed data did not reset at midnight local time
 - missing asyncio import
