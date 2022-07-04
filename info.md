@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.15
+- works in both 2022.6 and 2022.7 beta
+
 v3.0.14
 - fixes HA 2022.7.0b2 errors (seems to :) )
 
