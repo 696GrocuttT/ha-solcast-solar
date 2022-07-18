@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.17
+- set the polling api time to 10mins after the hour to give solcast api time to calculate satellite data
+
 v3.0.16
 - fixed api polling to get actual data once in a while during the day
 - added full path to data file - thanks OmenWild
