@@ -1,5 +1,12 @@
 ### Changes
 
+v3.0.19
+- FIX: coordinator.py", line 133, in update_forecast for update_callback in self._listeners: RuntimeError: dictionary changed size during iteration
+- this version needs HA 2022.7+ now
+
+v3.0.18
+- changed api counter return value calculations
+
 v3.0.17
 - set the polling api time to 10mins after the hour to give solcast api time to calculate satellite data
 
