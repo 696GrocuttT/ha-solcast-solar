@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.21
+-added more debug logs for greater info
+
 v3.0.19
 - FIX: coordinator.py", line 133, in update_forecast for update_callback in self._listeners: RuntimeError: dictionary changed size during iteration
 - this version needs HA 2022.7+ now
