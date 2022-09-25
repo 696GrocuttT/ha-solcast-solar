@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.22
+-added more debug log code
+
 v3.0.21
 -added more debug logs for greater info
 
