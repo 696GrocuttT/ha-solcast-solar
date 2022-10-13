@@ -1,5 +1,9 @@
 ### Changes
 
+v3.0.23
+-added more debug log code
+- added the service to update forecast
+
 v3.0.22
 -added more debug log code
 
