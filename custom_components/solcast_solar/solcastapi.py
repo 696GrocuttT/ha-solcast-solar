@@ -54,10 +54,12 @@ class SolcastApi:
         self,
         aiohttp_session: ClientSession,
         options: ConnectionOptions,
+        apiCacheEnabled: bool = False
     ):
         """Device init."""
         self.aiohttp_session = aiohttp_session
         self.options = options
+        self.apiCacheEnabled = apiCacheEnabled
         self._sites = []
         self._data = dict({'forecasts':[], 'energy': {}, 'api_used':0, 'last_updated': dt.now(timezone.utc).replace(year=2000,month=1,day=1).isoformat()})
         self._api_used = 0
@@ -73,14 +75,25 @@ class SolcastApi:
                 params = {"format": "json", "api_key": spl.strip()}
                 _LOGGER.debug(f"SOLCAST: trying to connect to - {self.options.host}/rooftop_sites?format=json&api_key={spl.strip()}")
                 async with async_timeout.timeout(10):
-                    resp: ClientResponse = await self.aiohttp_session.get(
-                        url=f"{self.options.host}/rooftop_sites", params=params, ssl=False
-                    )
-    
-                    resp_json = await resp.json(content_type=None)
+                    apiCacheFileName = "sites.json"
+                    if self.apiCacheEnabled and file_exists(apiCacheFileName):
+                        status = 404
+                        with open(apiCacheFileName) as f:
+                            resp_json = json.load(f)
+                            status = 200
+                    else:
+                        resp: ClientResponse = await self.aiohttp_session.get(
+                            url=f"{self.options.host}/rooftop_sites", params=params, ssl=False
+                        )
+        
+                        resp_json = await resp.json(content_type=None)
+                        status = resp.status
+                        if self.apiCacheEnabled:
+                            with open(apiCacheFileName, 'w') as f:
+                                json.dump(resp_json, f, ensure_ascii=False)
+                            
                     _LOGGER.debug(f"SOLCAST: sites_data code http_session returned data type is {type(resp_json)}")
-                    _LOGGER.debug(f"SOLCAST: sites_data code http_session returned status {resp.status}")
-                    status = resp.status
+                    _LOGGER.debug(f"SOLCAST: sites_data code http_session returned status {status}")
 
                 if status == 200:
                     d = cast(dict, resp_json)
@@ -106,7 +119,7 @@ class SolcastApi:
     async def load_saved_data(self):
         try:
             if len(self._sites) > 0:
-                if file_exists(self._filename):
+                if not self.apiCacheEnabled and file_exists(self._filename):
                     with open(self._filename) as data_file:
                         self._data = json.load(data_file, cls=JSONDecoder)
                         _LOGGER.debug(f"SOLCAST: load_saved_data file exists.. file type is {type(self._data)}")
@@ -485,14 +498,25 @@ class SolcastApi:
             _LOGGER.debug(f"SOLCAST: fetch_data code url - {url}")
 
             async with async_timeout.timeout(20):
-                resp: ClientResponse = await self.aiohttp_session.get(
-                    url=url, params=params, ssl=False
-                )
+                apiCacheFileName = path + "_" + site + ".json"
+                if self.apiCacheEnabled and file_exists(apiCacheFileName):
+                    status = 404
+                    with open(apiCacheFileName) as f:
+                        resp_json = json.load(f)
+                        status = 200
+                else:
+                    resp: ClientResponse = await self.aiohttp_session.get(
+                        url=url, params=params, ssl=False
+                    )
     
-                resp_json = await resp.json(content_type=None)
+                    resp_json = await resp.json(content_type=None)
+                    status = resp.status
+                    if self.apiCacheEnabled:
+                        with open(apiCacheFileName, 'w') as f:
+                            json.dump(resp_json, f, ensure_ascii=False)
+                        
                 _LOGGER.debug(f"SOLCAST: fetch_data code http_session returned data type is {type(resp_json)}")
-                _LOGGER.debug(f"SOLCAST: fetch_data code http_session status is {resp.status}")
-                status = resp.status
+                _LOGGER.debug(f"SOLCAST: fetch_data code http_session status is {status}")
 
             if status == 429:
                 _LOGGER.warning("Exceeded Solcast API allowed polling limit")
