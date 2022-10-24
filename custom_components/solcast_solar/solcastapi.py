@@ -17,6 +17,7 @@ import async_timeout
 from aiohttp.client_reqrep import ClientResponse
 from isodate import parse_datetime
 
+_JSON_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -119,13 +120,16 @@ class SolcastApi:
     async def load_saved_data(self):
         try:
             if len(self._sites) > 0:
+                self._data = []
                 if not self.apiCacheEnabled and file_exists(self._filename):
                     with open(self._filename) as data_file:
-                        self._data = json.load(data_file, cls=JSONDecoder)
-                        _LOGGER.debug(f"SOLCAST: load_saved_data file exists.. file type is {type(self._data)}")
-                    if self._data and "api_used" in self._data:
-                        self._api_used = self._data["api_used"]
-                else:
+                        jsonData = json.load(data_file, cls=JSONDecoder)
+                        _LOGGER.debug(f"SOLCAST: load_saved_data file exists.. file type is {type(jsonData)}")
+                        if jsonData.get("version", 1) == _JSON_VERSION:
+                            self._data = jsonData
+                            if "api_used" in self._data:
+                                self._api_used = self._data["api_used"]
+                if not self._data:
                     #no file to load
                     _LOGGER.debug(f"SOLCAST: load_saved_data there is no existing file to load")
                     await self.http_data(True)
@@ -486,6 +490,7 @@ class SolcastApi:
 
                 self._data["last_updated"] = dt.now(timezone.utc).replace(second=0 ,microsecond=0).isoformat()
                 self._data['api_used'] = self._api_used
+                self._data['version'] = _JSON_VERSION
 
             with open(self._filename, 'w') as f:
                 json.dump(self._data, f, ensure_ascii=False, cls=DateTimeEncoder)
