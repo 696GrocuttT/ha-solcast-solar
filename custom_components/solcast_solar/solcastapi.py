@@ -371,6 +371,8 @@ class SolcastApi:
                     for x in ae['estimated_actuals']:
                         z = parse_datetime(x['period_end']).astimezone() - timedelta(minutes=30)
                         if z.date() == today:
+                            # The pv_estimate from solcast is an average power figure. This code assumes
+                            # each slot is 30 minutes long so *0.5 to convert to an energy figure in kwh 
                             _data.append({"period_end": z,"pv_estimate": x["pv_estimate"]*0.5})
 
                     _data = sorted(_data, key=itemgetter("period_end"))
@@ -391,7 +393,10 @@ class SolcastApi:
                 # _s.update({site['resource_id']:{'forecasts': _data2}})
                 
                 if dopast:
-                    _data = _data + _data2
+                    # There can be some overlap between the estimated actuals and the forecast, so only add
+                    # a forcast sample if we don't already have that data point.
+                    actualsTimestamps = list(map(lambda x: x["period_end"], _data))
+                    _data.extend(filter(lambda x: x["period_end"] not in actualsTimestamps, _data2))
                 else:
                     #_LOGGER.debug("not doing past data so fill ion the blanks")
                     _data = _olddata['siteinfo'][site['resource_id']]['forecasts']
