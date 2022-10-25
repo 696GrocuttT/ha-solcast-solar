@@ -237,8 +237,10 @@ class SolcastApi:
         """Return Solcast Forecasts data for today"""
         try:
             da = dt.now().replace(minute=0, second=0, microsecond=0).date()
-            g = [d for d in self._data["forecasts"] if d['period_start'].date() == da]
-            return {"forecast": g}
+            g = [d for d in self._data["forecasts"]         if d['period_start'].date() == da]
+            h = [d for d in self._data["detailedForecasts"] if d['period_start'].date() == da]
+            return {"forecast":         g,
+                    "detailedForecast": h}
         except Exception:
             return {}
 
@@ -246,8 +248,10 @@ class SolcastApi:
         """Return Solcast Forecasts data for tomorrow"""
         try:
             da = dt.now().replace(minute=0, second=0, microsecond=0).date() + timedelta(days=1)
-            g = [d for d in self._data["forecasts"] if d['period_start'].date() == da]
-            return {"forecast": g}
+            g = [d for d in self._data["forecasts"]         if d['period_start'].date() == da]
+            h = [d for d in self._data["detailedForecasts"] if d['period_start'].date() == da]
+            return {"forecast":         g,
+                    "detailedForecast": h}
         except Exception:
             return {}
 
@@ -454,35 +458,38 @@ class SolcastApi:
                 # _LOGGER.debug("next data check.. should be midnight today")
                 # _LOGGER.debug(_data[0])
 
-                _d = []
-                it = iter(_data)
-                for x in it:
-                    a = x
-                    b = next(it)
-                    # if not a['period_start'].hour == b['period_start'].hour:
-                    #     #_LOGGER.error(f"not same hour for {a} and {b}")
-                    #     _LOGGER.warn(f"solcast - api error.. dam it! still missing data from solcast api between hours {a} and {b}")
-                    if a['period_start'].minute == 0:
-                        _d.append({"period_start": a['period_start'],"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
-                    else:
-                        #_LOGGER.warn("hmm this should not have data at the 30min mark.. should be on the hour values")
-                        _t = a['period_start'].replace(minute=0)
-                        _d.append({"period_start": _t,"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
-
-
+                # Combine the data from the current solar array with the previous ones
                 if len(self._data) == 0:
-                    self._data = _d
+                    self._data = _data
                 else:
                     for number in range(len(self._data)):
                         p = self._data[number]
-                        p["pv_estimate"] = float(p["pv_estimate"]) + float(_d[number]["pv_estimate"])
+                        p["pv_estimate"] = float(p["pv_estimate"]) + float(_data[number]["pv_estimate"])
+
+            # Combine pairs of samples to get slot lengths of 1 hour
+            _detailedForcost = self._data
+            self._data       = []
+            it               = iter(_detailedForcost)
+            for x in it:
+                a = x
+                b = next(it)
+                # if not a['period_start'].hour == b['period_start'].hour:
+                #     #_LOGGER.error(f"not same hour for {a} and {b}")
+                #     _LOGGER.warn(f"solcast - api error.. dam it! still missing data from solcast api between hours {a} and {b}")
+                if a['period_start'].minute == 0:
+                    self._data.append({"period_start": a['period_start'],"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
+                else:
+                    #_LOGGER.warn("hmm this should not have data at the 30min mark.. should be on the hour values")
+                    _t = a['period_start'].replace(minute=0)
+                    self._data.append({"period_start": _t,"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
 
             if self._data == []:
                 self._data = _olddata
                 self._data['api_used'] = self._api_used
             else:
                 #self._data = sorted(self._data, key=itemgetter("period_start"))
-                self._data = dict({"forecasts": self._data})
+                self._data = dict({"forecasts": self._data,
+                                    "detailedForecasts": _detailedForcost})
 
                 self._data["energy"] = {"wh_hours": self.makeenergydict()}
 
