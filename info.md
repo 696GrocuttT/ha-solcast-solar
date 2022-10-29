@@ -1,14 +1,17 @@
 ### Changes
 
+v3.0.24
+- merged PR from @696GrocuttT 
+
 v3.0.23
--added more debug log code
+- added more debug log code
 - added the service to update forecast
 
 v3.0.22
--added more debug log code
+- added more debug log code
 
 v3.0.21
--added more debug logs for greater info
+- added more debug logs for greater info
 
 v3.0.19
 - FIX: coordinator.py", line 133, in update_forecast for update_callback in self._listeners: RuntimeError: dictionary changed size during iteration
