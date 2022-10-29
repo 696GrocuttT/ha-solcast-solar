@@ -120,16 +120,17 @@ class SolcastApi:
     async def load_saved_data(self):
         try:
             if len(self._sites) > 0:
-                self._data = []
+                loadedData = False
                 if not self.apiCacheEnabled and file_exists(self._filename):
                     with open(self._filename) as data_file:
                         jsonData = json.load(data_file, cls=JSONDecoder)
                         _LOGGER.debug(f"SOLCAST: load_saved_data file exists.. file type is {type(jsonData)}")
                         if jsonData.get("version", 1) == _JSON_VERSION:
+                            loadedData = True
                             self._data = jsonData
                             if "api_used" in self._data:
                                 self._api_used = self._data["api_used"]
-                if not self._data:
+                if not loadedData:
                     #no file to load
                     _LOGGER.debug(f"SOLCAST: load_saved_data there is no existing file to load")
                     await self.http_data(True)
@@ -354,10 +355,8 @@ class SolcastApi:
             today = dt.now().date()
             lastday = dt.now().date() + timedelta(days=7)
 
-            _olddata = self._data
-
             #if dopast:
-            self._data = []
+            _detailedForcost = []
 
             _s = {}
 
@@ -373,7 +372,6 @@ class SolcastApi:
                 if dopast:
                     ae = await self.fetch_data("estimated_actuals", 28, site=site['resource_id'],  apikey=site['apikey'])
                     if not type(ae) is dict:
-                        self._data = _olddata
                         return
 
                     for x in ae['estimated_actuals']:
@@ -388,7 +386,6 @@ class SolcastApi:
 
                 af = await self.fetch_data("forecasts", 168, site=site['resource_id'], apikey=site['apikey'])
                 if not type(af) is dict:
-                    self._data = _olddata
                     return
 
                 _data2 = []
@@ -407,7 +404,7 @@ class SolcastApi:
                     _data.extend(filter(lambda x: x["period_start"] not in actualsTimestamps, _data2))
                 else:
                     #_LOGGER.debug("not doing past data so fill ion the blanks")
-                    _data = _olddata['siteinfo'][site['resource_id']]['forecasts']
+                    _data = self._data['siteinfo'][site['resource_id']]['forecasts']
 
                     #v3.0.26 change for issue 83
                     if not _data2:
@@ -433,10 +430,10 @@ class SolcastApi:
                     if _sec.seconds > 1800:  #more than 30min then we are missing data
                         #_LOGGER.warn(f"Solcast missing forecast interval item from {_data[n]['period_start']} to {_data[n+1]['period_start']}")
                         findme = _data[n]["period_start"] + timedelta(minutes=30)
-                        if site['resource_id'] in _olddata:
-                            if 'forecasts' in _olddata[site['resource_id']] :
+                        if site['resource_id'] in self._data:
+                            if 'forecasts' in self._data[site['resource_id']] :
                                 
-                                inset_data = [d for d in _olddata[site['resource_id']]["forecasts"] if d['period_start'] == findme.isoformat()]
+                                inset_data = [d for d in self._data[site['resource_id']]["forecasts"] if d['period_start'] == findme.isoformat()]
                                 if len(inset_data) > 0:
                                     z = parse_datetime(inset_data[0]['period_start']).astimezone() 
                                     #_LOGGER.debug("adding missing solcast item {inset_data}")
@@ -464,17 +461,16 @@ class SolcastApi:
                 # _LOGGER.debug(_data[0])
 
                 # Combine the data from the current solar array with the previous ones
-                if len(self._data) == 0:
-                    self._data = _data
+                if len(_detailedForcost) == 0:
+                    _detailedForcost = _data
                 else:
-                    for number in range(len(self._data)):
-                        p = self._data[number]
+                    for number in range(len(_detailedForcost)):
+                        p = _detailedForcost[number]
                         p["pv_estimate"] = float(p["pv_estimate"]) + float(_data[number]["pv_estimate"])
 
             # Combine pairs of samples to get slot lengths of 1 hour
-            _detailedForcost = self._data
-            self._data       = []
-            it               = iter(_detailedForcost)
+            _newData = []
+            it       = iter(_detailedForcost)
             for x in it:
                 a = x
                 b = next(it)
@@ -482,18 +478,17 @@ class SolcastApi:
                 #     #_LOGGER.error(f"not same hour for {a} and {b}")
                 #     _LOGGER.warn(f"solcast - api error.. dam it! still missing data from solcast api between hours {a} and {b}")
                 if a['period_start'].minute == 0:
-                    self._data.append({"period_start": a['period_start'],"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
+                    _newData.append({"period_start": a['period_start'],"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
                 else:
                     #_LOGGER.warn("hmm this should not have data at the 30min mark.. should be on the hour values")
                     _t = a['period_start'].replace(minute=0)
-                    self._data.append({"period_start": _t,"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
+                    _newData.append({"period_start": _t,"pv_estimate": (a["pv_estimate"] + b["pv_estimate"])})
 
-            if self._data == []:
-                self._data = _olddata
+            if _newData == []:
                 self._data['api_used'] = self._api_used
             else:
                 #self._data = sorted(self._data, key=itemgetter("period_start"))
-                self._data = dict({"forecasts": self._data,
+                self._data = dict({"forecasts": _newData,
                                     "detailedForecasts": _detailedForcost})
 
                 self._data["energy"] = {"wh_hours": self.makeenergydict()}
