@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import logging
 import traceback
 from dataclasses import dataclass
@@ -420,7 +421,7 @@ class SolcastApi:
                                 _data.append({"period_start": item['period_start'],"pv_estimate": item['pv_estimate']})
 
                 _data = sorted(_data, key=itemgetter("period_start"))
-                _s.update({site['resource_id']:{'forecasts': _data}})
+                _s.update({site['resource_id']:{'forecasts': copy.deepcopy(_data)}})
 
                 # _LOGGER.debug("OK up to here now.. should be midnight today")
                 # _LOGGER.debug(_data[0])
