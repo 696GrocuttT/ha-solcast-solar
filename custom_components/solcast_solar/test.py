@@ -26,6 +26,10 @@ async def test():
             print("Total today " + str(solcast.get_total_kwh_forecast_today()))
             print("Peak today " + str(solcast.get_peak_w_today()))
             print("Peak time today " + str(solcast.get_peak_w_time_today()))
+            print("Todays detailed forecast")
+            for sample in solcast.get_forecast_today()['detailedForecast']:
+                time = sample.pop('period_start')
+                print("    " + time.isoformat() + " " + str(sample))
     except Exception as err:
         _LOGGER.error("async_setup_entry: %s",traceback.format_exc())
         return False

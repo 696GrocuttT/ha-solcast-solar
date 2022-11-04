@@ -393,7 +393,9 @@ class SolcastApi:
                 for x in af['forecasts']:
                     z = parse_datetime(x['period_end']).astimezone() - timedelta(minutes=30)
                     if z.date() < lastday:
-                        _data2.append({"period_start": z,"pv_estimate": x["pv_estimate"]*0.5})
+                        _data2.append({"period_start": z,"pv_estimate": x["pv_estimate"]*0.5,
+                                                         "pv_estimate10": x["pv_estimate10"]*0.5,
+                                                         "pv_estimate90": x["pv_estimate90"]*0.5})
 
                 # _data2 = sorted(_data2, key=itemgetter("period_start"))
                 # _s.update({site['resource_id']:{'forecasts': _data2}})
@@ -412,13 +414,14 @@ class SolcastApi:
                         _LOGGER.debug(f"No new data. Solcast returned {_data2}")
                     else:
                         for item in _data2:
+                            item = dict(item)
                             found_data = [d for d in _data if d['period_start'] == item['period_start']]
                             if len(found_data) > 0:
-                                #_LOGGER.warn(f"found this to update {found_data[0]}")
-                                found_data[0].update({"period_start": item['period_start'],"pv_estimate": item['pv_estimate']})
+                                #_LOGGER.warn(f"found this to update {found_data[0]} with {item}")
+                                found_data[0].update(item)
                             else:
-                                #_LOGGER.warn(f"did not found update so adding to list")
-                                _data.append({"period_start": item['period_start'],"pv_estimate": item['pv_estimate']})
+                                #_LOGGER.warn(f"did not found update so adding to list: {item}")
+                                _data.append(item)
 
                 _data = sorted(_data, key=itemgetter("period_start"))
                 _s.update({site['resource_id']:{'forecasts': copy.deepcopy(_data)}})
@@ -436,9 +439,14 @@ class SolcastApi:
                                 
                                 inset_data = [d for d in self._data[site['resource_id']]["forecasts"] if d['period_start'] == findme.isoformat()]
                                 if len(inset_data) > 0:
-                                    z = parse_datetime(inset_data[0]['period_start']).astimezone() 
+                                    inset_data = inset_data[0]
+                                    z = parse_datetime(inset_data['period_start']).astimezone() 
                                     #_LOGGER.debug("adding missing solcast item {inset_data}")
-                                    _data.append({"period_start": z,"pv_estimate": inset_data[0]["pv_estimate"]})
+                                    newElement = {"period_start": z,"pv_estimate": inset_data["pv_estimate"]}
+                                    if "pv_estimate10" in inset_data and "pv_estimate90" in inset_data:
+                                        newElement["pv_estimate10"] = inset_data["pv_estimate10"]
+                                        newElement["pv_estimate90"] = inset_data["pv_estimate90"]
+                                    _data.append(newElement)
                                 else:
                                     #_LOGGER.debug("IS old data to fill in the missing data but didnt find any match so adding empty item as 0 value")
                                     _data.append({"period_start": findme.astimezone(),"pv_estimate": 0})
@@ -468,6 +476,17 @@ class SolcastApi:
                     for number in range(len(_detailedForcost)):
                         p = _detailedForcost[number]
                         p["pv_estimate"] = float(p["pv_estimate"]) + float(_data[number]["pv_estimate"])
+                        # Merge the 10 and 90 % estimates. But only leave the keys in the dict if they are present in both the sources
+                        has10 = "pv_estimate10" in p
+                        has90 = "pv_estimate90" in p
+                        if has10 and has90 and "pv_estimate10" in p and "pv_estimate90" in p:
+                            p["pv_estimate10"] = float(p["pv_estimate10"]) + float(_data[number]["pv_estimate10"])
+                            p["pv_estimate90"] = float(p["pv_estimate90"]) + float(_data[number]["pv_estimate90"])
+                        else:
+                            if has10:
+                                del p["pv_estimate10"]
+                            if has90:
+                                del p["pv_estimate90"]
 
             # Combine pairs of samples to get slot lengths of 1 hour
             _newData = []
