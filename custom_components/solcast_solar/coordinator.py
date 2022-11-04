@@ -112,13 +112,13 @@ class SolcastUpdateCoordinator(DataUpdateCoordinator):
                 else:
                     #sometime today.. 
                     _hournow = dt_util.now().hour
+                    #if midnight, or sunrise hour or sunset set run it
                     if _hournow == 0 or _hournow == self._starthour or _hournow == self._finishhour:
-                        #if midnight, or sunrise hour or sunset set run it
                         if  _hournow == self._finishhour:
-                            _LOGGER.debug("SOLCAST: its midnight force and update api data call")
+                            _LOGGER.debug("SOLCAST: its sunset force and update api data call including updating the actual past values")
                             await self.solcast.force_api_poll(True)
                         else:
-                            _LOGGER.debug("SOLCAST: start or finish hour calling update code")
+                            _LOGGER.debug("SOLCAST: midnight or sunrise calling update code")
                             await self.solcast.force_api_poll(False)
                     elif (_hournow > self._starthour and _hournow < self._finishhour):
                         #else its between sun rise and set
