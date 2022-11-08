@@ -1,5 +1,8 @@
 ### Changes
 
+v3.0.26
+- testing fix for issue 83
+
 v3.0.25
 - removed PR for 3.0.24 - caused errors in the forecast graph
 - fixed HA 2022.11 cant add forcast to solar dashboard
